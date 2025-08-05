@@ -191,6 +191,30 @@ bool Grid::updateShape(char dir)
     return true;   
 }
 
+void Grid::clearFilledLines()
+{
+    for (int i = 0; i < rows_; ++i)
+    {
+        bool isFilled = true;
+        for (int j = 0; j < cols_; ++j)
+        {
+            if (grid_[i][j] != 1)
+            {
+                isFilled = false;
+                break;
+            }
+        }
+        // clear row
+        if (isFilled)
+        {
+            for (int j = 0; j < cols_; ++j)
+            {
+                grid_[i][j] = 0;
+            }
+        }
+    }
+}
+
 void Grid::printGrid()
 {
     for (int i = 0; i < cols_; ++i)

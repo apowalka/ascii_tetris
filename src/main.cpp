@@ -5,10 +5,11 @@
 int main()
 {
     int rows = 50;
-    int cols = 50;
+    int cols = 25;
     Grid* myGrid = new Grid(rows, cols);
     while (true)
     {
+        myGrid->clearFilledLines();
         myGrid->printGrid();
         if (Utility::_kbhit())
         {

@@ -25,6 +25,7 @@ public:
     void rotateShape();
     bool updateShape(char dir);
     void printGrid();
+    void clearFilledLines();
 
 private:
     void createGrid(int**& grid, int rows, int cols);
