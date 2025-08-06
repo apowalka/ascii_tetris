@@ -77,23 +77,78 @@ void Grid::drawShape()
     }
 }
 
-// TODO needs work
+// TODO block when moving to the left into grid[i][j]=1
+bool Grid::isLeftMovementBlocked()
+{
+    int currR = currentShapePosition_.first; 
+    int currC = currentShapePosition_.second; 
+    if (currC - 1 < 0)
+    {
+        return true;
+    }
+
+    // check left most column of the shape
+    std::vector<std::vector<int>> shapeGrid = currShape_->getGrid();
+    for (int i = 0; i < shapeGrid.size(); ++i)
+    {
+        if (shapeGrid[i][0] == 1)
+        {
+            if (grid_[currR + i][currC - 1] == 1)
+            {
+                return true;
+            }
+            break;
+        }
+    }
+
+    return false;
+}
+
+int Grid::getShapeWidth()
+{
+    // go through each row and count the number of 1's
+    // use the max amount
+    int maxWidth = 0;
+    std::vector<std::vector<int>> shapeGrid = currShape_->getGrid();
+    for (int i = 0; i < shapeGrid.size(); ++i)
+    {
+        int tmpWidth = 0;
+        for (int j = 0; j < shapeGrid.at(i).size(); ++j)
+        {
+            if (shapeGrid.at(i).at(j) == 1)
+            {
+                ++tmpWidth; 
+            }
+        }
+        if (tmpWidth > maxWidth)
+        {
+            maxWidth = tmpWidth;
+        }
+    }
+    return maxWidth;
+}
+
+// TODO block when moving to the right into grid[i][j]=1
+bool Grid::isRightMovementBlocked()
+{
+    int currR = currentShapePosition_.first; 
+    int currC = currentShapePosition_.second; 
+
+    // make sure we can't leave the grid
+    int currShapeWidth = getShapeWidth();
+    if (currC + currShapeWidth == cols_)
+    {
+        return true;
+    }
+
+    return false;
+}
+
 bool Grid::isDownMovementBlocked()
 {
     int currR = currentShapePosition_.first; 
     int currC = currentShapePosition_.second; 
     std::vector<std::vector<int>> shapeGrid = currShape_->getGrid();
-    // check last row of shape and if one row down on grid is open
-
-    //vector<int> lastShapeRow = shapeGrid.at(shapeGrid.size() - 1);
-    //for (int j = 0; j < currShape_->cols(); ++j)
-    //{
-    //    if (lastShapeRow.at(j) == 1 
-    //        && grid_[currR + shapeGrid.size() - 1 + 1][currC + j] == 1)
-    //    {
-    //        return true;
-    //    }
-    //}
 
     for (int j = 0; j < currShape_->cols(); ++j)
     {
@@ -114,19 +169,12 @@ bool Grid::isDownMovementBlocked()
 
 void Grid::moveShape(std::pair<int,int> unitDir)
 {
-    if (!isDownMovementBlocked())
-    {
-        std::pair<int, int> currPos = currentShapePosition_;
-        clearShape();
-        
-        currentShapePosition_ 
-            = {currPos.first + unitDir.first, currPos.second + unitDir.second};
-        drawShape();
-    }
-    else
-    {
-        generateNewShape();
-    }
+    std::pair<int, int> currPos = currentShapePosition_;
+    clearShape();
+    
+    currentShapePosition_ 
+        = {currPos.first + unitDir.first, currPos.second + unitDir.second};
+    drawShape();
 }
 
 void Grid::clearShape()
@@ -173,15 +221,28 @@ bool Grid::updateShape(char dir)
     std::pair<int, int> pos = currentShapePosition_;
     if (dir == 'a') // move left
     {
-        moveShape({0, -1});      
+        if (!isLeftMovementBlocked())
+        {
+            moveShape({0, -1});      
+        }
     }
     else if (dir == 'd')
     {
-        moveShape({0, 1});      
+        if (!isRightMovementBlocked())
+        {
+            moveShape({0, 1});      
+        }
     }
     else if (dir == 's')
     {
-        moveShape({1, 0});
+        if (!isDownMovementBlocked())
+        {
+            moveShape({1, 0});
+        }
+        else
+        {
+            generateNewShape();
+        }
     }
     else if (dir == 'm') // rotate
     {

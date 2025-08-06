@@ -20,6 +20,8 @@ public:
     void generateNewShape();
     void drawShape();
     bool isDownMovementBlocked();
+    bool isLeftMovementBlocked();
+    bool isRightMovementBlocked();
     void moveShape(std::pair<int,int> unitDir);
     void clearShape();
     void rotateShape();
@@ -30,6 +32,7 @@ public:
 private:
     void createGrid(int**& grid, int rows, int cols);
     void setInitialPattern();
+    int getShapeWidth();
 
     int** grid_;
     int rows_;
