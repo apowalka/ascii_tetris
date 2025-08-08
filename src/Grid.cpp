@@ -267,9 +267,10 @@ void Grid::clearFilledLines()
             {
                 grid_[i][j] = 0;
             }
+            usleep(100000);
             for (int ii = i; ii - 1 >= 0; --ii)
             {
-                for (int jj = 0; jj < cols_ - 1; ++jj)
+                for (int jj = 0; jj < cols_; ++jj)
                 {
                     grid_[ii][jj] = grid_[ii-1][jj];
                 }

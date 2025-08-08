@@ -4,7 +4,7 @@
 
 int main()
 {
-    int rows = 50;
+    int rows = 20;
     int cols = 25;
     Grid* myGrid = new Grid(rows, cols);
     while (true)
