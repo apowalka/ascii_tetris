@@ -17,14 +17,6 @@ class Grid
 public:
     Grid(int rows, int cols);
     ~Grid();
-    void generateNewShape();
-    void drawShape();
-    bool isDownMovementBlocked();
-    bool isLeftMovementBlocked();
-    bool isRightMovementBlocked();
-    void moveShape(std::pair<int,int> unitDir);
-    void clearShape();
-    void rotateShape();
     bool updateShape(char dir);
     void printGrid();
     void clearFilledLines();
@@ -33,6 +25,13 @@ private:
     void createGrid(int**& grid, int rows, int cols);
     void setInitialPattern();
     int getShapeWidth();
+    void generateNewShape();
+    void drawShape();
+    void moveShape(std::pair<int,int> unitDir);
+    void clearShape();
+    void rotateShape();
+    bool isRotateBlocked();
+    bool isMovementBlocked(std::pair<int,int> unitDir);
 
     int** grid_;
     int rows_;

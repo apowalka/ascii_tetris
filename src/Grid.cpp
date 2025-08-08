@@ -77,33 +77,6 @@ void Grid::drawShape()
     }
 }
 
-// TODO block when moving to the left into grid[i][j]=1
-bool Grid::isLeftMovementBlocked()
-{
-    int currR = currentShapePosition_.first; 
-    int currC = currentShapePosition_.second; 
-    if (currC - 1 < 0)
-    {
-        return true;
-    }
-
-    // check left most column of the shape
-    std::vector<std::vector<int>> shapeGrid = currShape_->getGrid();
-    for (int i = 0; i < shapeGrid.size(); ++i)
-    {
-        if (shapeGrid[i][0] == 1)
-        {
-            if (grid_[currR + i][currC - 1] == 1)
-            {
-                return true;
-            }
-            break;
-        }
-    }
-
-    return false;
-}
-
 int Grid::getShapeWidth()
 {
     // go through each row and count the number of 1's
@@ -128,42 +101,60 @@ int Grid::getShapeWidth()
     return maxWidth;
 }
 
-// TODO block when moving to the right into grid[i][j]=1
-bool Grid::isRightMovementBlocked()
+bool Grid::isMovementBlocked(std::pair<int,int> unitDir)
 {
-    int currR = currentShapePosition_.first; 
-    int currC = currentShapePosition_.second; 
+    int rows = currShape_->rows();
+    int cols = currShape_->cols();
+    auto shapeGrid = currShape_->getGrid();
 
-    // make sure we can't leave the grid
-    int currShapeWidth = getShapeWidth();
-    if (currC + currShapeWidth == cols_)
+    int currR = currentShapePosition_.first + unitDir.first; 
+    int currC = currentShapePosition_.second + unitDir.second; 
+
+    clearShape();
+    for (int i = 0; i < rows; ++i)
     {
-        return true;
-    }
-
+        for (int j = 0; j < cols; ++j)
+        {
+            if ( currR + i > rows_-1 || currC + j > cols_-1 || currC + j < 0
+                || (grid_[currR + i][currC + j] == 1 && shapeGrid[i][j] == 1))
+            {
+                drawShape();
+                return true;
+            }
+        }
+    }   
+    
+    drawShape();
     return false;
 }
 
-bool Grid::isDownMovementBlocked()
+bool Grid::isRotateBlocked()
 {
+    // make copy to test rotation
+    Shape myShape(*currShape_);
+    myShape.rotate();
+    int rows = myShape.rows();
+    int cols = myShape.cols();
+    auto shapeGrid = myShape.getGrid();
+
     int currR = currentShapePosition_.first; 
     int currC = currentShapePosition_.second; 
-    std::vector<std::vector<int>> shapeGrid = currShape_->getGrid();
 
-    for (int j = 0; j < currShape_->cols(); ++j)
+    clearShape();
+    for (int i = 0; i < rows; ++i)
     {
-        for (int i = currShape_->rows() - 1; i >= 0; --i)
+        for (int j = 0; j < cols; ++j)
         {
-            if (shapeGrid[i][j] == 1)
+            if ( currR + i > rows_-1 || currC + j > cols_-1 || currC + j < 0
+                || (grid_[currR + i][currC + j] == 1 && shapeGrid[i][j] == 1))
             {
-                if (grid_[currR + i + 1][currC + j] == 1)
-                {
-                    return true;
-                }
-                break;
+                drawShape();
+                return true;
             }
         }
     }
+
+    drawShape();
     return false;
 }
 
@@ -221,32 +212,36 @@ bool Grid::updateShape(char dir)
     std::pair<int, int> pos = currentShapePosition_;
     if (dir == 'a') // move left
     {
-        if (!isLeftMovementBlocked())
+        if (!isMovementBlocked({0, -1}))
         {
             moveShape({0, -1});      
         }
     }
     else if (dir == 'd')
     {
-        if (!isRightMovementBlocked())
+        if (!isMovementBlocked({0, 1}))
         {
             moveShape({0, 1});      
         }
     }
     else if (dir == 's')
     {
-        if (!isDownMovementBlocked())
+        if (!isMovementBlocked({1, 0}))
         {
             moveShape({1, 0});
         }
         else
         {
+            clearFilledLines();
             generateNewShape();
         }
     }
     else if (dir == 'm') // rotate
     {
-        rotateShape();
+        if (!isRotateBlocked())
+        {
+            rotateShape();
+        }
     }
 
     return true;   
@@ -254,7 +249,7 @@ bool Grid::updateShape(char dir)
 
 void Grid::clearFilledLines()
 {
-    for (int i = 0; i < rows_; ++i)
+    for (int i = rows_ - 1; i >= 0; --i)
     {
         bool isFilled = true;
         for (int j = 0; j < cols_; ++j)
@@ -271,6 +266,13 @@ void Grid::clearFilledLines()
             for (int j = 0; j < cols_; ++j)
             {
                 grid_[i][j] = 0;
+            }
+            for (int ii = i; ii - 1 >= 0; --ii)
+            {
+                for (int jj = 0; jj < cols_ - 1; ++jj)
+                {
+                    grid_[ii][jj] = grid_[ii-1][jj];
+                }
             }
         }
     }

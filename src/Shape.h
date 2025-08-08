@@ -10,9 +10,17 @@ public:
     {
         shapeGrid_ = pattern;
     }
-    int rows() {return shapeGrid_.size();}
-    int cols() {return shapeGrid_.at(0).size();}
+    Shape(const Shape& myShape)
+        :shapeGrid_(myShape.getGrid())
+    {
+    }
+    virtual ~Shape(){}
 
+    int rows() const { return shapeGrid_.size(); }
+    int cols() const { return shapeGrid_.at(0).size(); }
+    std::vector<std::vector<int>> getGrid() const { return shapeGrid_; }
+
+    // TODO do this in place
     void rotate()
     {
         const int currRows = rows();
@@ -23,7 +31,6 @@ public:
         {
             newShapeGrid.at(i).resize(currRows);    
         }
-        
 
         for (int i = 0; i < currRows; ++i)
         {
@@ -35,8 +42,6 @@ public:
 
         shapeGrid_ = newShapeGrid;
     }
-    std::vector<std::vector<int>> getGrid(){ return shapeGrid_; }
-    virtual ~Shape(){}
 
 private:
     std::vector<std::vector<int>> shapeGrid_;

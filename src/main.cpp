@@ -9,7 +9,7 @@ int main()
     Grid* myGrid = new Grid(rows, cols);
     while (true)
     {
-        myGrid->clearFilledLines();
+        //myGrid->clearFilledLines();
         myGrid->printGrid();
         if (Utility::_kbhit())
         {
