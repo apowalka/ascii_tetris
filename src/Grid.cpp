@@ -275,6 +275,8 @@ void Grid::clearFilledLines()
                     grid_[ii][jj] = grid_[ii-1][jj];
                 }
             }
+            // go back and check the line we copied into the clearned line memory
+            ++i;
         }
     }
 }
