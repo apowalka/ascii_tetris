@@ -149,11 +149,14 @@ bool Grid::isMovementBlocked(std::pair<int,int> unitDir)
     {
         for (int j = 0; j < cols; ++j)
         {
-            if ( currR + i > rows_-1 || currC + j > cols_-1 || currC + j < 0
-                || (grid_[currR + i][currC + j] == 1 && shapeGrid[i][j] == 1))
+            if (shapeGrid[i][j] == 1)
             {
-                drawShape();
-                return true;
+                if ( currR + i > rows_-1 || currC + j > cols_-1 || currC + j < 0
+                    || grid_[currR + i][currC + j] == 1)
+                {
+                    drawShape();
+                    return true;
+                }
             }
         }
     }   

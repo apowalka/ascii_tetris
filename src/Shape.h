@@ -92,7 +92,7 @@ class JShape : public Shape
 {
 public:
     JShape()
-        : Shape({ {0, 1},{0, 1},{1, 1} })
+        : Shape({ {0, 0, 0}, {1, 1, 1}, {0, 0, 1} })
     {
     }
     ~JShape(){}
@@ -102,7 +102,7 @@ class LShape : public Shape
 {
 public:
     LShape()
-        : Shape({ {1, 0},{1, 0},{1, 1} })
+        : Shape({ {0, 0, 0}, {1, 1, 1}, {1, 0, 0} })
     {
     }
     ~LShape(){}
@@ -112,7 +112,7 @@ class ZShape : public Shape
 {
 public:
     ZShape()
-        : Shape({ {1, 1, 0},{0, 1, 1} })
+        : Shape({ {0, 0, 0}, {1, 1, 0},{0, 1, 1} })
     {
     }
     ~ZShape(){}
@@ -122,7 +122,7 @@ class SShape : public Shape
 {
 public:
     SShape()
-        : Shape({ {0, 1, 1},{1, 1, 0} })
+        : Shape({ {0, 0, 0}, {0, 1, 1}, {1, 1, 0} })
     {
     }
     ~SShape(){}
@@ -132,7 +132,7 @@ class TShape : public Shape
 {
 public:
     TShape()
-        : Shape({ {0, 1, 0},{1, 1, 1} })
+        : Shape({ {0, 0, 0}, {1, 1, 1}, {0, 1, 0} })
     {
     }
     ~TShape(){}
@@ -142,7 +142,7 @@ class IShape : public Shape
 {
 public:
     IShape()
-        : Shape({ {1} , {1}, {1}, {1} })
+        : Shape({ {0,0,0,0} , {1,1,1,1}, {0,0,0,0}, {0,0,0,0} })
     {
     }
     ~IShape(){}
