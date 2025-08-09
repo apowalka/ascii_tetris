@@ -209,6 +209,7 @@ void Grid::rotateShape()
 
 bool Grid::updateShape(char dir)
 {
+    std::lock_guard<std::mutex> guard(myMutex);
     std::pair<int, int> pos = currentShapePosition_;
     if (dir == 'a') // move left
     {
@@ -283,6 +284,7 @@ void Grid::clearFilledLines()
 
 void Grid::printGrid()
 {
+    std::lock_guard<std::mutex> guard(myMutex);
     for (int i = 0; i < cols_; ++i)
     {
         cout << "_";

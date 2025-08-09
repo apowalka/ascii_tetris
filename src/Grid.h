@@ -4,6 +4,7 @@
 #include <string>
 #include <cstring>
 #include <vector>
+#include <mutex>
 #include <cstdint>
 #include <algorithm>
 #include <unistd.h>
@@ -38,6 +39,7 @@ private:
     int cols_;
     Shape* currShape_;
     std::pair<int, int> currentShapePosition_;
+    std::mutex myMutex;
 };
 
 #endif
