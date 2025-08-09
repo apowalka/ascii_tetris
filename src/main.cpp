@@ -5,7 +5,7 @@
 
 void captureInput(Grid* myGrid)
 {
-    while (true)
+    while (!myGrid->isGameOver())
     {
         if (Utility::_kbhit())
         {
@@ -18,7 +18,7 @@ void captureInput(Grid* myGrid)
 
 void refreshScreen(Grid* myGrid)
 {
-    while (true)
+    while (!myGrid->isGameOver())
     {
         myGrid->printGrid();
         usleep(10000);
@@ -28,10 +28,18 @@ void refreshScreen(Grid* myGrid)
 
 void moveDown(Grid* myGrid)
 {
-    while (true)
+    int usSleep = 1000000;
+    const unsigned int increment = 10;
+    unsigned int nextLevelScore = increment;
+    while (!myGrid->isGameOver())
     {
         myGrid->updateShape('s');
-        usleep(1000000);
+        usleep(usSleep);
+        if ((myGrid->getScore() + 1) % (nextLevelScore + 1) == 0)
+        {
+            usSleep *= 0.7;
+            nextLevelScore += increment;
+        }
     };
 }
 
@@ -47,6 +55,8 @@ int main()
     capture.join();
     refresh.join();
     down.join();
+    myGrid->printGrid();
+    cout << "Game Over" << endl;
     
     return 0;
 }

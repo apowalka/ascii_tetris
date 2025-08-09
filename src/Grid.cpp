@@ -55,7 +55,39 @@ void Grid::generateNewShape()
         currShape_ = new IShape();
     }
     currentShapePosition_ = { 0, cols_/2};
-    drawShape();
+    if (canPlaceShape())
+    {
+        drawShape();
+    }
+    else
+    {
+        endGame();
+    }
+}
+
+void Grid::endGame()
+{
+    isGameOver_ = true;
+}
+
+bool Grid::canPlaceShape()
+{
+    int currR = currentShapePosition_.first; 
+    int currC = currentShapePosition_.second; 
+    std::vector<std::vector<int>> shapeGrid = currShape_->getGrid();
+
+    // loop over shape grid
+    for (int i = 0; i < currShape_->rows() ; ++i)
+    {
+        for (int j = 0; j < currShape_->cols(); ++j)
+        {
+            if (shapeGrid.at(i).at(j) == 1 && grid_[currR + i][currC + j] == 1)
+            {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 void Grid::drawShape()
@@ -101,6 +133,8 @@ int Grid::getShapeWidth()
     return maxWidth;
 }
 
+// clear shape from grid and determine if we can make the move in the unit direction
+// then redraw the shapea back where it was originally
 bool Grid::isMovementBlocked(std::pair<int,int> unitDir)
 {
     int rows = currShape_->rows();
@@ -264,11 +298,12 @@ void Grid::clearFilledLines()
         // clear row
         if (isFilled)
         {
+            ++score_; 
             for (int j = 0; j < cols_; ++j)
             {
                 grid_[i][j] = 0;
             }
-            usleep(100000);
+            //usleep(100000);
             for (int ii = i; ii - 1 >= 0; --ii)
             {
                 for (int jj = 0; jj < cols_; ++jj)
@@ -285,6 +320,8 @@ void Grid::clearFilledLines()
 void Grid::printGrid()
 {
     std::lock_guard<std::mutex> guard(myMutex);
+    cout << " Welcome to Artris " << endl;
+    cout << " Score: " <<  score_ << endl;
     for (int i = 0; i < cols_; ++i)
     {
         cout << "_";
@@ -297,7 +334,7 @@ void Grid::printGrid()
         {
             if (grid_[i][j] == 1)
             {
-                cout << "X";
+                cout << 'X';
             }
             else
             {
@@ -327,4 +364,16 @@ void Grid::setInitialPattern()
             grid_[i][j] = rand() % 2;
         }
     }
+}
+
+bool Grid::isGameOver()
+{
+    std::lock_guard<std::mutex> guard(myMutex);
+    return isGameOver_;
+}
+
+unsigned int Grid::getScore()
+{
+    std::lock_guard<std::mutex> guard(myMutex);
+    return score_;
 }

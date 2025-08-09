@@ -20,7 +20,8 @@ public:
     ~Grid();
     bool updateShape(char dir);
     void printGrid();
-    void clearFilledLines();
+    bool isGameOver();
+    unsigned int getScore();
 
 private:
     void createGrid(int**& grid, int rows, int cols);
@@ -33,6 +34,9 @@ private:
     void rotateShape();
     bool isRotateBlocked();
     bool isMovementBlocked(std::pair<int,int> unitDir);
+    void clearFilledLines();
+    bool canPlaceShape();
+    void endGame();
 
     int** grid_;
     int rows_;
@@ -40,6 +44,8 @@ private:
     Shape* currShape_;
     std::pair<int, int> currentShapePosition_;
     std::mutex myMutex;
+    bool isGameOver_ = false;
+    unsigned int score_ = 0;
 };
 
 #endif
