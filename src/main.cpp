@@ -35,9 +35,9 @@ void moveDown(Grid* myGrid)
     {
         myGrid->updateShape('s');
         usleep(usSleep);
-        if ((myGrid->getScore() + 1) % (nextLevelScore + 1) == 0)
+        if (myGrid->getScore() >= nextLevelScore)
         {
-            usSleep *= 0.7;
+            usSleep *= 0.6;
             nextLevelScore += increment;
         }
     };
@@ -46,7 +46,7 @@ void moveDown(Grid* myGrid)
 int main()
 {
     int rows = 20;
-    int cols = 25;
+    int cols = 10;
     Grid* myGrid = new Grid(rows, cols);
 
     std::thread capture(captureInput, myGrid);
