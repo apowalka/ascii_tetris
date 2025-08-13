@@ -283,6 +283,37 @@ bool Grid::updateShape(char dir)
         {
             rotateShape();
         }
+        // attempt wall kick
+        else
+        {
+            if (!isMovementBlocked({0, -1}))
+            {
+                moveShape({0, -1});
+                if (!isRotateBlocked()) 
+                {
+                    rotateShape();
+                }
+                else
+                {
+                    // move shape back
+                    moveShape({0, 1});
+                }
+            }
+            else if (!isMovementBlocked({0, 1}))
+            {
+                moveShape({0, 1});
+                if (!isRotateBlocked()) 
+                {
+                    rotateShape();
+                }
+                else
+                {
+                    // move shape back
+                    moveShape({0, -1});
+                }
+            }
+        }
+
     }
 
     return true;   
