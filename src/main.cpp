@@ -20,9 +20,9 @@ void refreshScreen(Grid* myGrid)
 {
     while (!myGrid->isGameOver())
     {
-        myGrid->printGrid();
         usleep(10000);
         system("clear");
+        myGrid->printGrid();
     };
 }
 
@@ -55,7 +55,6 @@ int main()
     capture.join();
     refresh.join();
     down.join();
-    myGrid->printGrid();
     cout << "Game Over" << endl;
     
     return 0;

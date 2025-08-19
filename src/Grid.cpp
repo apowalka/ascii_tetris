@@ -371,11 +371,11 @@ void Grid::printGrid()
         {
             if (grid_[i][j] == 1)
             {
-                cout << "X";
+                cout << "\u2588";
             }
             else
             {
-                cout << " ";
+                cout << "\u2591";
             }
         }
         cout << "|" << endl;
