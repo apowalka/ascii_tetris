@@ -22,6 +22,9 @@ public:
     void printGrid();
     bool isGameOver();
     unsigned int getScore();
+    int** getGrid();
+    int getRows(){return rows_;};
+    int getCols(){return cols_;};
 
 private:
     void createGrid(int**& grid, int rows, int cols);

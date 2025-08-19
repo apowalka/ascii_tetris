@@ -382,6 +382,12 @@ void Grid::printGrid()
     }
 }
 
+int** Grid::getGrid()
+{
+    std::lock_guard<std::mutex> guard(myMutex);
+    return grid_;
+}
+
 void Grid::createGrid(int**& grid, int rows, int cols)
 {
     grid = new int*[rows];  
