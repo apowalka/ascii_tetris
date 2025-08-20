@@ -15,6 +15,7 @@
 
 // pointer to window that grid will be printed in
 WINDOW* win;
+WINDOW* win2;
 
 /**
  * Define a semi-cross platform helper method that waits/sleeps for a bit.
@@ -77,6 +78,7 @@ class telemetry_client {
 public:
     typedef websocketpp::client<websocketpp::config::asio_client> client;
     typedef websocketpp::lib::lock_guard<websocketpp::lib::mutex> scoped_lock;
+    typedef client::message_ptr message_ptr;
 
     telemetry_client() : m_open(false),m_done(false) {
         // set up access channels to only log interesting things
@@ -90,10 +92,12 @@ public:
 
         // Bind the handlers we are using
         using websocketpp::lib::placeholders::_1;
+        using websocketpp::lib::placeholders::_2;
         using websocketpp::lib::bind;
         m_client.set_open_handler(bind(&telemetry_client::on_open,this,_1));
         m_client.set_close_handler(bind(&telemetry_client::on_close,this,_1));
         m_client.set_fail_handler(bind(&telemetry_client::on_fail,this,_1));
+        m_client.set_message_handler(bind(&telemetry_client::on_message,this,_1,_2));
 
        int rows = 20;
        int cols = 10;
@@ -163,6 +167,18 @@ public:
 
         scoped_lock guard(m_lock);
         m_done = true;
+    }
+
+    void on_message(websocketpp::connection_hdl hdl, message_ptr msg) {
+    //std::cout << "on_message called with hdl: " << hdl.lock().get()
+    //          << " and message: " << msg->get_payload()
+    //          << std::endl;
+
+        const std::string& test = msg->get_payload();
+        //std::replace( test.begin(), test.end(), '0', ' ');
+        //std::replace( test.begin(), test.end(), '1', 'X');
+        mvwprintw(win2, 0, 0, "%s", test.c_str());
+        wrefresh(win2);
     }
 
     void telemetry_loop() {
@@ -240,7 +256,11 @@ int main(int argc, char* argv[])
     box(win, 0, 0); // Draw a box around the window
     wrefresh(win);
 
-    start_color();
+    win2  = newwin(40, 20, 0, 30); // height, width, start_y, start_x
+    box(win2, 0, 0); // Draw a box around the window
+    wrefresh(win2);
+
+    //start_color();
 
     telemetry_client c;
 

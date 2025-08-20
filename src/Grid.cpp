@@ -385,9 +385,8 @@ void Grid::printGrid()
 void Grid:: printToWindow(WINDOW* win)
 {
     std::lock_guard<std::mutex> guard(myMutex);
-    //wprintw(win, "Welcome to Artris");
-    //cout << " Welcome to Artris " << endl;
-    //cout << " Score: " <<  score_ << endl;
+    mvwprintw(win, 2, 1, "%s", "Welcome to Artris");
+    mvwprintw(win, 3, 1, "%s %d", "Score: ", score_);
 
     int rowOffset = 5;
     int colOffset = 5;
@@ -397,7 +396,7 @@ void Grid:: printToWindow(WINDOW* win)
         {
             if (grid_[i][j] == 1)
             {
-                mvwaddch(win, i + rowOffset, j + colOffset, 'X');
+                mvwaddch(win, i + rowOffset, j + colOffset, '+' | A_STANDOUT);
             }
             else
             {
