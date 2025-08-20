@@ -6,10 +6,15 @@
 #include <websocketpp/config/asio_no_tls_client.hpp>
 #include <websocketpp/client.hpp>
 
+
 // This header pulls in the WebSocket++ abstracted thread support that will
 // select between boost::thread and std::thread based on how the build system
 // is configured.
 #include <websocketpp/common/thread.hpp>
+
+
+// pointer to window that grid will be printed in
+WINDOW* win;
 
 /**
  * Define a semi-cross platform helper method that waits/sleeps for a bit.
@@ -40,8 +45,8 @@ void refreshScreen(Grid* myGrid)
     while (!myGrid->isGameOver())
     {
         usleep(10000);
-        system("clear");
-        myGrid->printGrid();
+        //system("clear");
+        myGrid->printToWindow(win);
     };
 }
 
@@ -224,7 +229,19 @@ private:
     Grid* myGrid_;
 };
 
-int main(int argc, char* argv[]) {
+int main(int argc, char* argv[])
+{
+    // create window for grid
+    initscr();
+    cbreak();
+    win  = newwin(40, 20, 0, 0); // height, width, start_y, start_x
+    refresh();
+
+    box(win, 0, 0); // Draw a box around the window
+    wrefresh(win);
+
+    start_color();
+
     telemetry_client c;
 
     std::string uri = "ws://localhost:9002";

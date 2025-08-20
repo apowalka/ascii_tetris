@@ -382,6 +382,33 @@ void Grid::printGrid()
     }
 }
 
+void Grid:: printToWindow(WINDOW* win)
+{
+    std::lock_guard<std::mutex> guard(myMutex);
+    //wprintw(win, "Welcome to Artris");
+    //cout << " Welcome to Artris " << endl;
+    //cout << " Score: " <<  score_ << endl;
+
+    int rowOffset = 5;
+    int colOffset = 5;
+    for (int i = 0; i < rows_; ++i)
+    {
+        for (int j = 0; j < cols_; ++j)
+        {
+            if (grid_[i][j] == 1)
+            {
+                mvwaddch(win, i + rowOffset, j + colOffset, 'X');
+            }
+            else
+            {
+                mvwaddch(win, i + rowOffset, j + colOffset, ' ');
+            }
+        }
+    }
+
+    wrefresh(win);
+}
+
 int** Grid::getGrid()
 {
     std::lock_guard<std::mutex> guard(myMutex);

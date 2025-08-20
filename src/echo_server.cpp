@@ -3,6 +3,9 @@
 #include <websocketpp/server.hpp>
 
 #include <iostream>
+#include <ncurses.h>
+
+WINDOW* win;
 
 typedef websocketpp::server<websocketpp::config::asio> server;
 
@@ -35,27 +38,23 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
     //}
 
     
-    system("clear");
-    //const std::string& test = msg->get_payload();
-    //for (int i = 0; i < test.size(); ++i)
-    //{
-    //    if (test.at(i) == 1)
-    //    {
-    //        std::cout<< "X";
-    //    }
-    //    else if (test.at(i) == 0)
-    //    {
-    //        std::cout<< " ";
-    //    }
-    //    else
-    //    {
-    //        std::cout << std::endl;
-    //    }
-    //}
-    std::cout << msg->get_payload() << std::endl;
+    const std::string& test = msg->get_payload();
+    //std::replace( test.begin(), test.end(), '0', ' ');
+    //std::replace( test.begin(), test.end(), '1', 'X');
+    mvwprintw(win, 0, 0, "%s", test.c_str());
+    wrefresh(win);
 }
 
 int main() {
+    initscr();
+    cbreak();
+    win  = newwin(40, 20, 0, 0); // height, width, start_y, start_x
+    refresh();
+
+    box(win, 0, 0); // Draw a box around the window
+    //`wprintw(win, "%s", "hellow");
+    wrefresh(win);
+
     // Create a server endpoint
     server echo_server;
 
@@ -80,8 +79,8 @@ int main() {
         // Start the ASIO io_service run loop
         echo_server.run();
     } catch (websocketpp::exception const & e) {
-        std::cout << e.what() << std::endl;
+        //std::cout << e.what() << std::endl;
     } catch (...) {
-        std::cout << "other exception" << std::endl;
+        //std::cout << "other exception" << std::endl;
     }
 }

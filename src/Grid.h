@@ -8,6 +8,8 @@
 #include <cstdint>
 #include <algorithm>
 #include <unistd.h>
+#define NCURSES_NOMACROS
+#include <ncurses.h>
 
 #include "Shape.h"
 
@@ -25,6 +27,7 @@ public:
     int** getGrid();
     int getRows(){return rows_;};
     int getCols(){return cols_;};
+    void printToWindow(WINDOW* win);
 
 private:
     void createGrid(int**& grid, int rows, int cols);
