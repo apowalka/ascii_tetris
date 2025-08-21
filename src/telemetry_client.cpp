@@ -175,9 +175,34 @@ public:
     //          << std::endl;
 
         const std::string& test = msg->get_payload();
-        //std::replace( test.begin(), test.end(), '0', ' ');
-        //std::replace( test.begin(), test.end(), '1', 'X');
-        mvwprintw(win2, 0, 0, "%s", test.c_str());
+        ////std::replace( test.begin(), test.end(), '0', ' ');
+        ////std::replace( test.begin(), test.end(), '1', 'X');
+        //mvwprintw(win2, 0, 0, "%s", test.c_str());
+        //wrefresh(win2);
+
+        const int rowLen = test.find("\n");
+        int rowOffset = 5;
+        int colOffset = 5;
+
+        int currRow = 0;
+        int currCol = 0;
+        for (int i = 0; i < test.size(); ++i)
+        {
+            if (test.at(i) == '1')
+            {
+                mvwaddch(win2, currRow  + rowOffset, currCol++ + colOffset, '+' | A_STANDOUT);
+            }
+            else if (test.at(i) == '0')
+            {
+                mvwaddch(win2, currRow  + rowOffset, currCol++ + colOffset, ' ');
+            }
+            else
+            {
+                ++currRow;
+                currCol = 0;
+            }
+        }
+
         wrefresh(win2);
     }
 
