@@ -4,8 +4,8 @@
 
 #include <iostream>
 #include <ncurses.h>
+#include <set>
 
-WINDOW* win;
 
 typedef websocketpp::server<websocketpp::config::asio> server;
 
@@ -15,10 +15,18 @@ using websocketpp::lib::bind;
 
 // pull out the type of messages sent by our config
 typedef server::message_ptr message_ptr;
+typedef std::set<websocketpp::connection_hdl,std::owner_less<websocketpp::connection_hdl>> con_list;
+
+WINDOW* win;
+con_list m_connections;
+
+void on_open(server* s, websocketpp::connection_hdl hdl) {
+    m_connections.insert(hdl);
+}
 
 // Define a callback to handle incoming messages
 void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
-    hdl.lock().get();
+    //hdl.lock().get();
     //std::cout << "on_message called with hdl: " << hdl.lock().get()
     //          << " and message: " << msg->get_payload()
     //          << std::endl;
@@ -30,20 +38,27 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
         return;
     }
 
-    // testing echo
-    try {
-        s->send(hdl, msg->get_payload(), msg->get_opcode());
-    } catch (websocketpp::exception const & e) {
-        std::cout << "Echo failed because: "
-                  << "(" << e.what() << ")" << std::endl;
+    // take data from player and send it to other player(s)
+    server::connection_ptr currCon = s->get_con_from_hdl(hdl);
+    for (auto con : m_connections)
+    {
+        server::connection_ptr someCon= s->get_con_from_hdl(con);
+        if (currCon != someCon)
+        {
+            try {
+                s->send(con, msg->get_payload(), msg->get_opcode());
+            } catch (websocketpp::exception const & e) {
+                std::cout << "Echo failed because: "
+                          << "(" << e.what() << ")" << std::endl;
+            }
+        }
     }
-
     
-    const std::string& test = msg->get_payload();
-    //std::replace( test.begin(), test.end(), '0', ' ');
-    //std::replace( test.begin(), test.end(), '1', 'X');
-    mvwprintw(win, 0, 0, "%s", test.c_str());
-    wrefresh(win);
+    //const std::string& test = msg->get_payload();
+    ////std::replace( test.begin(), test.end(), '0', ' ');
+    ////std::replace( test.begin(), test.end(), '1', 'X');
+    //mvwprintw(win, 0, 0, "%s", test.c_str());
+    //wrefresh(win);
 }
 
 int main() {
@@ -69,6 +84,7 @@ int main() {
 
         // Register our message handler
         echo_server.set_message_handler(bind(&on_message,&echo_server,::_1,::_2));
+        echo_server.set_open_handler(bind(&on_open,&echo_server,::_1));
 
         // Listen on port 9002
         echo_server.set_reuse_addr(true);
