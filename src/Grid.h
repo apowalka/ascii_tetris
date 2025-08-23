@@ -7,6 +7,7 @@
 #include <mutex>
 #include <cstdint>
 #include <algorithm>
+#include <utility>
 #include <unistd.h>
 #define NCURSES_NOMACROS
 #include <ncurses.h>
@@ -21,13 +22,11 @@ public:
     Grid(int rows, int cols);
     ~Grid();
     bool updateShape(char dir);
-    void printGrid();
     bool isGameOver();
     unsigned int getScore();
-    int** getGrid();
+    std::pair<int**, int> getGameInfo();
     int getRows(){return rows_;};
     int getCols(){return cols_;};
-    void printToWindow(WINDOW* win);
 
 private:
     void createGrid(int**& grid, int rows, int cols);

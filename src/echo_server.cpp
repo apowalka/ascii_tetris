@@ -25,20 +25,14 @@ void on_open(server* s, websocketpp::connection_hdl hdl) {
 }
 
 // Define a callback to handle incoming messages
-void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
-    //hdl.lock().get();
-    //std::cout << "on_message called with hdl: " << hdl.lock().get()
-    //          << " and message: " << msg->get_payload()
-    //          << std::endl;
-
-    // check for a special command to instruct the server to stop listening so
-    // it can be cleanly exited.
+void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg)
+{
     if (msg->get_payload() == "stop-listening") {
         s->stop_listening();
         return;
     }
 
-    // take data from player and send it to other player(s)
+    // take data received from player1 and send it to player2
     server::connection_ptr currCon = s->get_con_from_hdl(hdl);
     for (auto con : m_connections)
     {
@@ -54,6 +48,7 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
         }
     }
     
+    // @NOTE this is for debugging purposes
     //const std::string& test = msg->get_payload();
     ////std::replace( test.begin(), test.end(), '0', ' ');
     ////std::replace( test.begin(), test.end(), '1', 'X');
@@ -64,7 +59,7 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg) {
 int main() {
     initscr();
     cbreak();
-    win  = newwin(40, 20, 0, 0); // height, width, start_y, start_x
+    win = newwin(40, 20, 0, 0); // height, width, start_y, start_x
     refresh();
 
     box(win, 0, 0); // Draw a box around the window
@@ -76,8 +71,9 @@ int main() {
 
     try {
         // Set logging settings
-        echo_server.set_access_channels(websocketpp::log::alevel::all);
-        echo_server.clear_access_channels(websocketpp::log::alevel::frame_payload);
+        echo_server.set_access_channels(websocketpp::log::alevel::none);
+        //echo_server.set_access_channels(websocketpp::log::alevel::connect);
+        //echo_server.clear_access_channels(websocketpp::log::alevel::frame_payload);
 
         // Initialize Asio
         echo_server.init_asio();

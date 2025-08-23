@@ -22,10 +22,74 @@ WINDOW* win2;
  */
 void wait_a_bit() {
 #ifdef WIN32
-    Sleep(1000);
+    Sleep(100);
 #else
-    sleep(1);
+    usleep(100000);
 #endif
+}
+
+void printGrid(Grid* myGrid)
+{
+    int rows  = myGrid->getRows();
+    int cols  = myGrid->getCols();
+    auto info = myGrid->getGameInfo();
+    int** gameGrid = info.first;
+    int score      = info.second;
+
+    cout << " Welcome to Artris " << endl;
+    cout << " Score: " <<  score << endl;
+    for (int i = 0; i < cols; ++i)
+    {
+        cout << "_";
+    }
+    cout << endl;
+    for (int i = 0; i < rows; ++i)
+    {
+        cout << "|";
+        for (int j = 0; j < cols; ++j)
+        {
+            if (gameGrid[i][j] == 1)
+            {
+                cout << "\u2588";
+            }
+            else
+            {
+                cout << "\u2591";
+            }
+        }
+        cout << "|" << endl;
+    }
+}
+
+void printToWindow(Grid* myGrid, WINDOW* myWin)
+{
+    int rows  = myGrid->getRows();
+    int cols  = myGrid->getCols();
+    auto info = myGrid->getGameInfo();
+    int** gameGrid = info.first;
+    int score      = info.second;
+
+    mvwprintw(myWin, 2, 1, "%s", "Welcome to Artris");
+    mvwprintw(myWin, 3, 1, "%s %d", "Score: ", score);
+
+    int rowOffset = 5;
+    int colOffset = 5;
+    for (int i = 0; i < rows; ++i)
+    {
+        for (int j = 0; j < cols; ++j)
+        {
+            if (gameGrid[i][j] == 1)
+            {
+                mvwaddch(myWin, i + rowOffset, j + colOffset, '+' | A_STANDOUT);
+            }
+            else
+            {
+                mvwaddch(myWin, i + rowOffset, j + colOffset, ' ');
+            }
+        }
+    }
+
+    wrefresh(myWin);
 }
 
 void captureInput(Grid* myGrid)
@@ -38,7 +102,7 @@ void captureInput(Grid* myGrid)
             myGrid->updateShape(dir);
         }
         usleep(10000);
-    };
+    }
 }
 
 void refreshScreen(Grid* myGrid)
@@ -46,9 +110,10 @@ void refreshScreen(Grid* myGrid)
     while (!myGrid->isGameOver())
     {
         usleep(10000);
-        //system("clear");
-        myGrid->printToWindow(win);
-    };
+        printToWindow(myGrid, win);
+    }
+    mvprintw(myGrid->getRows(), 0, "Game Over");
+    refresh();
 }
 
 void moveDown(Grid* myGrid)
@@ -65,15 +130,9 @@ void moveDown(Grid* myGrid)
             usSleep *= 0.6;
             nextLevelScore += increment;
         }
-    };
+    }
 }
 
-/**
- * The telemetry client connects to a WebSocket server and sends a message every
- * second containing an integer count. This example can be used as the basis for
- * programs where a client connects and pushes data for logging, stress/load
- * testing, etc.
- */
 class telemetry_client {
 public:
     typedef websocketpp::client<websocketpp::config::asio_client> client;
@@ -83,9 +142,9 @@ public:
     telemetry_client() : m_open(false),m_done(false) {
         // set up access channels to only log interesting things
         m_client.clear_access_channels(websocketpp::log::alevel::all);
-        m_client.set_access_channels(websocketpp::log::alevel::connect);
-        m_client.set_access_channels(websocketpp::log::alevel::disconnect);
-        m_client.set_access_channels(websocketpp::log::alevel::app);
+        //m_client.set_access_channels(websocketpp::log::alevel::connect);
+        //m_client.set_access_channels(websocketpp::log::alevel::disconnect);
+        //m_client.set_access_channels(websocketpp::log::alevel::app);
 
         // Initialize the Asio transport policy
         m_client.init_asio();
@@ -231,7 +290,8 @@ public:
             }
 
             val.str("");
-            int** currGrid = myGrid_->getGrid();
+            auto info = myGrid_->getGameInfo();
+            int** currGrid = info.first;
             int rows = myGrid_->getRows();
             int cols = myGrid_->getCols();
             for (int i = 0; i < rows; ++i)
@@ -242,9 +302,9 @@ public:
                 }
                 val << std::endl;
             }
-            //val << "count is " << count++;
 
-            m_client.get_alog().write(websocketpp::log::alevel::app, val.str());
+
+            //m_client.get_alog().write(websocketpp::log::alevel::app, val.str());
             m_client.send(m_hdl,val.str(),websocketpp::frame::opcode::text,ec);
 
             // The most likely error that we will get is that the connection is

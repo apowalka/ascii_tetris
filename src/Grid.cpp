@@ -354,64 +354,10 @@ void Grid::clearFilledLines()
     }
 }
 
-void Grid::printGrid()
+std::pair<int**, int> Grid::getGameInfo()
 {
     std::lock_guard<std::mutex> guard(myMutex);
-    cout << " Welcome to Artris " << endl;
-    cout << " Score: " <<  score_ << endl;
-    for (int i = 0; i < cols_; ++i)
-    {
-        cout << "_";
-    }
-    cout << endl;
-    for (int i = 0; i < rows_; ++i)
-    {
-        cout << "|";
-        for (int j = 0; j < cols_; ++j)
-        {
-            if (grid_[i][j] == 1)
-            {
-                cout << "\u2588";
-            }
-            else
-            {
-                cout << "\u2591";
-            }
-        }
-        cout << "|" << endl;
-    }
-}
-
-void Grid:: printToWindow(WINDOW* win)
-{
-    std::lock_guard<std::mutex> guard(myMutex);
-    mvwprintw(win, 2, 1, "%s", "Welcome to Artris");
-    mvwprintw(win, 3, 1, "%s %d", "Score: ", score_);
-
-    int rowOffset = 5;
-    int colOffset = 5;
-    for (int i = 0; i < rows_; ++i)
-    {
-        for (int j = 0; j < cols_; ++j)
-        {
-            if (grid_[i][j] == 1)
-            {
-                mvwaddch(win, i + rowOffset, j + colOffset, '+' | A_STANDOUT);
-            }
-            else
-            {
-                mvwaddch(win, i + rowOffset, j + colOffset, ' ');
-            }
-        }
-    }
-
-    wrefresh(win);
-}
-
-int** Grid::getGrid()
-{
-    std::lock_guard<std::mutex> guard(myMutex);
-    return grid_;
+    return {grid_, score_};
 }
 
 void Grid::createGrid(int**& grid, int rows, int cols)
