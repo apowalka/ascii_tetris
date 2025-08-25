@@ -336,6 +336,7 @@ void Grid::clearFilledLines()
         if (isFilled)
         {
             ++score_; 
+            ++linesFilled_;
             for (int j = 0; j < cols_; ++j)
             {
                 grid_[i][j] = 0;
@@ -354,10 +355,52 @@ void Grid::clearFilledLines()
     }
 }
 
-std::pair<int**, int> Grid::getGameInfo()
+void Grid::addPenaltyLines(unsigned int lines)
 {
     std::lock_guard<std::mutex> guard(myMutex);
-    return {grid_, score_};
+    // need to clear shape. It would also get moved up otherwise.
+    clearShape();
+
+    // check if moving up causes game to end
+    for (int i = 0; i < lines; ++i)
+    {
+        for (int j = 0; j < cols_; ++j)
+        {
+            if (grid_[i][j] == 1)
+            {
+                endGame();
+                break;
+            }
+        }
+        if (isGameOver_ == true)
+        {
+            break;
+        }
+    }
+
+    // move everything except for the shape up
+    for (int i = 0; i < rows_ - lines; ++i)
+    {
+        for (int j = 0; j < cols_; ++j)
+        {
+            grid_[i][j] = grid_[i + lines][j];
+        }
+    }
+    // TODO what is there is a 1's in any of the spots we just redrew in
+    drawShape();
+}
+
+GameInfo Grid::getGameInfo()
+{
+    std::lock_guard<std::mutex> guard(myMutex);
+    GameInfo info;
+    info.grid = grid_;
+    info.rows = rows_;
+    info.cols = cols_;
+    info.score = score_;
+    info.linesFilled = getLinesFilled();
+    info.isGameOver = isGameOver_;
+    return info;
 }
 
 void Grid::createGrid(int**& grid, int rows, int cols)
@@ -391,4 +434,11 @@ unsigned int Grid::getScore()
 {
     std::lock_guard<std::mutex> guard(myMutex);
     return score_;
+}
+
+unsigned int Grid::getLinesFilled()
+{
+    unsigned int count = linesFilled_;
+    linesFilled_ = 0;
+    return count;
 }

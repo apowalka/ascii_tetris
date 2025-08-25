@@ -12,6 +12,8 @@
 // is configured.
 #include <websocketpp/common/thread.hpp>
 
+#include <nlohmann/json.hpp>
+
 
 // pointer to window that grid will be printed in
 WINDOW* win;
@@ -30,11 +32,11 @@ void wait_a_bit() {
 
 void printGrid(Grid* myGrid)
 {
-    int rows  = myGrid->getRows();
-    int cols  = myGrid->getCols();
-    auto info = myGrid->getGameInfo();
-    int** gameGrid = info.first;
-    int score      = info.second;
+    GameInfo info  = myGrid->getGameInfo();
+    int** gameGrid = info.grid;
+    int rows       = info.rows;
+    int cols       = info.cols;
+    int score      = info.score;
 
     cout << " Welcome to Artris " << endl;
     cout << " Score: " <<  score << endl;
@@ -63,11 +65,12 @@ void printGrid(Grid* myGrid)
 
 void printToWindow(Grid* myGrid, WINDOW* myWin)
 {
-    int rows  = myGrid->getRows();
-    int cols  = myGrid->getCols();
     auto info = myGrid->getGameInfo();
-    int** gameGrid = info.first;
-    int score      = info.second;
+    int** gameGrid = info.grid;
+    int rows       = info.rows;
+    int cols       = info.cols;
+    int score      = info.score;
+    int isGameOver = info.isGameOver;
 
     mvwprintw(myWin, 2, 1, "%s", "Welcome to Artris");
     mvwprintw(myWin, 3, 1, "%s %d", "Score: ", score);
@@ -112,8 +115,6 @@ void refreshScreen(Grid* myGrid)
         usleep(10000);
         printToWindow(myGrid, win);
     }
-    mvprintw(myGrid->getRows(), 0, "Game Over");
-    refresh();
 }
 
 void moveDown(Grid* myGrid)
@@ -228,30 +229,35 @@ public:
         m_done = true;
     }
 
-    void on_message(websocketpp::connection_hdl hdl, message_ptr msg) {
-    //std::cout << "on_message called with hdl: " << hdl.lock().get()
-    //          << " and message: " << msg->get_payload()
-    //          << std::endl;
+    void on_message(websocketpp::connection_hdl hdl, message_ptr msg)
+    {
 
         const std::string& test = msg->get_payload();
+        nlohmann::json doc = nlohmann::json::parse(test);
+        std::string grid = doc["grid"];
+        unsigned int rows = doc["rows"];
+        unsigned int score = doc["score"];
+        unsigned int lines = doc["linesFilled"];
         ////std::replace( test.begin(), test.end(), '0', ' ');
         ////std::replace( test.begin(), test.end(), '1', 'X');
         //mvwprintw(win2, 0, 0, "%s", test.c_str());
         //wrefresh(win2);
 
-        const int rowLen = test.find("\n");
+        mvwprintw(win2, 0, 1, "TEST: %d", lines);
+        mvwprintw(win2, 1, 1, "%s", "Welcome to Artris");
+        mvwprintw(win2, 2, 1, "%s %d", "Score: ", score);
         int rowOffset = 5;
         int colOffset = 5;
 
         int currRow = 0;
         int currCol = 0;
-        for (int i = 0; i < test.size(); ++i)
+        for (int i = 0; i < grid.size(); ++i)
         {
-            if (test.at(i) == '1')
+            if (grid.at(i) == '1')
             {
                 mvwaddch(win2, currRow  + rowOffset, currCol++ + colOffset, '+' | A_STANDOUT);
             }
-            else if (test.at(i) == '0')
+            else if (grid.at(i) == '0')
             {
                 mvwaddch(win2, currRow  + rowOffset, currCol++ + colOffset, ' ');
             }
@@ -263,6 +269,10 @@ public:
         }
 
         wrefresh(win2);
+        if (lines > 0)
+        {
+            myGrid_->addPenaltyLines(lines);
+        }
     }
 
     void telemetry_loop() {
@@ -290,10 +300,10 @@ public:
             }
 
             val.str("");
-            auto info = myGrid_->getGameInfo();
-            int** currGrid = info.first;
-            int rows = myGrid_->getRows();
-            int cols = myGrid_->getCols();
+            GameInfo info = myGrid_->getGameInfo();
+            int** currGrid = info.grid;
+            int rows = info.rows;
+            int cols = info.cols;
             for (int i = 0; i < rows; ++i)
             {
                 for (int j = 0; j < cols; ++j)
@@ -303,9 +313,16 @@ public:
                 val << std::endl;
             }
 
+            nlohmann::json doc; 
+            doc["grid"] = val.str();
+            doc["rows"] = rows;
+            doc["cols"] = cols;
+            doc["isGameOver"] = info.isGameOver;;
+            doc["score"] = info.score;
+            doc["linesFilled"] = info.linesFilled;
 
             //m_client.get_alog().write(websocketpp::log::alevel::app, val.str());
-            m_client.send(m_hdl,val.str(),websocketpp::frame::opcode::text,ec);
+            m_client.send(m_hdl, doc.dump(), websocketpp::frame::opcode::text, ec);
 
             // The most likely error that we will get is that the connection is
             // not in the right state. Usually this means we tried to send a

@@ -15,7 +15,7 @@ message(${NCURSES_LIB})
 project(ascii_tetris)
 #set(tetris_sources main.cpp Grid.cpp Shape.h Utility.h)
 
-set(tetris_sources telemetry_client.cpp Grid.cpp Shape.h Utility.h)
+set(tetris_sources telemetry_client.cpp Grid.cpp Shape.h Utility.h /usr/include/nlohmann/json.hpp)
 add_executable(tetris ${tetris_sources})
 target_link_libraries(tetris ${NCURSES_LIB})
 
