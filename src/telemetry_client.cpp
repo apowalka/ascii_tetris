@@ -26,14 +26,14 @@ void wait_a_bit() {
 #ifdef WIN32
     Sleep(100);
 #else
-    usleep(100000);
+    usleep(1000000);
 #endif
 }
 
 void printGrid(Grid* myGrid)
 {
     GameInfo info  = myGrid->getGameInfo();
-    int** gameGrid = info.grid;
+    const std::vector<std::vector<int>>& gameGrid = info.grid;
     int rows       = info.rows;
     int cols       = info.cols;
     int score      = info.score;
@@ -63,10 +63,9 @@ void printGrid(Grid* myGrid)
     }
 }
 
-void printToWindow(Grid* myGrid, WINDOW* myWin)
+void printToWindow(const GameInfo& info, WINDOW* myWin)
 {
-    auto info = myGrid->getGameInfo();
-    int** gameGrid = info.grid;
+    const std::vector<std::vector<int>>& gameGrid = info.grid;
     int rows       = info.rows;
     int cols       = info.cols;
     int score      = info.score;
@@ -85,9 +84,13 @@ void printToWindow(Grid* myGrid, WINDOW* myWin)
             {
                 mvwaddch(myWin, i + rowOffset, j + colOffset, '+' | A_STANDOUT);
             }
-            else
+            else if (gameGrid[i][j] == 0)
             {
                 mvwaddch(myWin, i + rowOffset, j + colOffset, ' ');
+            }
+            else if (gameGrid[i][j] == 2)
+            {
+                mvwaddch(myWin, i + rowOffset, j + colOffset, '=' | A_STANDOUT);
             }
         }
     }
@@ -113,7 +116,7 @@ void refreshScreen(Grid* myGrid)
     while (!myGrid->isGameOver())
     {
         usleep(10000);
-        printToWindow(myGrid, win);
+        printToWindow(myGrid->getGameInfo(), win);
     }
 }
 
@@ -187,7 +190,6 @@ public:
         std::thread capture(captureInput, myGrid_);
         std::thread refresh(refreshScreen, myGrid_);
         std::thread down(moveDown, myGrid_);
-        //cout << "Game Over" << endl;
 
         // Create a thread to run the ASIO io_service event loop
         websocketpp::lib::thread asio_thread(&client::run, &m_client);
@@ -195,17 +197,17 @@ public:
         // Create a thread to run the telemetry loop
         websocketpp::lib::thread telemetry_thread(&telemetry_client::telemetry_loop,this);
 
-        asio_thread.join();
         telemetry_thread.join();
         capture.join();
         refresh.join();
         down.join();
+        asio_thread.join();
     }
 
     // The open handler will signal that we are ready to start sending telemetry
     void on_open(websocketpp::connection_hdl) {
-        m_client.get_alog().write(websocketpp::log::alevel::app,
-            "Connection opened, starting telemetry!");
+        //m_client.get_alog().write(websocketpp::log::alevel::app,
+        //    "Connection opened, starting telemetry!");
 
         scoped_lock guard(m_lock);
         m_open = true;
@@ -213,8 +215,8 @@ public:
 
     // The close handler will signal that we should stop sending telemetry
     void on_close(websocketpp::connection_hdl) {
-        m_client.get_alog().write(websocketpp::log::alevel::app,
-            "Connection closed, stopping telemetry!");
+        //m_client.get_alog().write(websocketpp::log::alevel::app,
+        //    "Connection closed, stopping telemetry!");
 
         scoped_lock guard(m_lock);
         m_done = true;
@@ -222,8 +224,8 @@ public:
 
     // The fail handler will signal that we should stop sending telemetry
     void on_fail(websocketpp::connection_hdl) {
-        m_client.get_alog().write(websocketpp::log::alevel::app,
-            "Connection failed, stopping telemetry!");
+        //m_client.get_alog().write(websocketpp::log::alevel::app,
+        //    "Connection failed, stopping telemetry!");
 
         scoped_lock guard(m_lock);
         m_done = true;
@@ -231,44 +233,21 @@ public:
 
     void on_message(websocketpp::connection_hdl hdl, message_ptr msg)
     {
-
         const std::string& test = msg->get_payload();
         nlohmann::json doc = nlohmann::json::parse(test);
-        std::string grid = doc["grid"];
-        unsigned int rows = doc["rows"];
-        unsigned int score = doc["score"];
-        unsigned int lines = doc["linesFilled"];
-        ////std::replace( test.begin(), test.end(), '0', ' ');
-        ////std::replace( test.begin(), test.end(), '1', 'X');
-        //mvwprintw(win2, 0, 0, "%s", test.c_str());
-        //wrefresh(win2);
 
-        mvwprintw(win2, 0, 1, "TEST: %d", lines);
-        mvwprintw(win2, 1, 1, "%s", "Welcome to Artris");
-        mvwprintw(win2, 2, 1, "%s %d", "Score: ", score);
-        int rowOffset = 5;
-        int colOffset = 5;
+        GameInfo info;
+        info.grid = doc["grid"].template get<std::vector<std::vector<int>>>();
+        info.rows = doc["rows"];
+        info.cols = doc["cols"];
+        info.score = doc["score"];
+        info.linesFilled = doc["linesFilled"];
+        info.isGameOver = doc["isGameOver"];
 
-        int currRow = 0;
-        int currCol = 0;
-        for (int i = 0; i < grid.size(); ++i)
-        {
-            if (grid.at(i) == '1')
-            {
-                mvwaddch(win2, currRow  + rowOffset, currCol++ + colOffset, '+' | A_STANDOUT);
-            }
-            else if (grid.at(i) == '0')
-            {
-                mvwaddch(win2, currRow  + rowOffset, currCol++ + colOffset, ' ');
-            }
-            else
-            {
-                ++currRow;
-                currCol = 0;
-            }
-        }
-
+        printToWindow(info, win2);
         wrefresh(win2);
+
+        unsigned int lines = doc["linesFilled"];
         if (lines > 0)
         {
             myGrid_->addPenaltyLines(lines);
@@ -301,25 +280,35 @@ public:
 
             val.str("");
             GameInfo info = myGrid_->getGameInfo();
-            int** currGrid = info.grid;
+            const std::vector<std::vector<int>>& currGrid = info.grid;
             int rows = info.rows;
             int cols = info.cols;
-            for (int i = 0; i < rows; ++i)
-            {
-                for (int j = 0; j < cols; ++j)
-                {
-                    val << currGrid[i][j];
-                }
-                val << std::endl;
-            }
+            //for (int i = 0; i < rows; ++i)
+            //{
+            //    for (int j = 0; j < cols; ++j)
+            //    {
+            //        val << currGrid[i][j];
+            //    }
+            //    val << std::endl;
+            //}
 
             nlohmann::json doc; 
-            doc["grid"] = val.str();
+            //doc["grid"] = val.str();
+            doc["grid"] = nlohmann::json::array();
             doc["rows"] = rows;
             doc["cols"] = cols;
             doc["isGameOver"] = info.isGameOver;;
             doc["score"] = info.score;
             doc["linesFilled"] = info.linesFilled;
+
+            for (int i = 0; i < rows; ++i)
+            {
+                auto& eachRow = doc["grid"];
+                for (int j = 0; j < cols; ++j)
+                {
+                    eachRow[i].push_back(currGrid[i][j]);
+                }
+            }
 
             //m_client.get_alog().write(websocketpp::log::alevel::app, val.str());
             m_client.send(m_hdl, doc.dump(), websocketpp::frame::opcode::text, ec);

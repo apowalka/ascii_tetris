@@ -18,12 +18,12 @@ using namespace std;
 
 struct GameInfo
 {
-    int** grid;
-    int rows;
-    int cols;
-    unsigned int score;
-    unsigned int linesFilled;
-    bool isGameOver;
+    std::vector<std::vector<int>> grid;
+    int rows = 0;
+    int cols = 0;
+    unsigned int score = 0;
+    unsigned int linesFilled = 0;
+    bool isGameOver = false;
 };
 
 class Grid
@@ -40,7 +40,7 @@ public:
     void addPenaltyLines(unsigned int lines);
 
 private:
-    void createGrid(int**& grid, int rows, int cols);
+    void createGrid(std::vector<std::vector<int>>& grid, int rows, int cols);
     void setInitialPattern();
     int getShapeWidth();
     void generateNewShape();
@@ -55,7 +55,7 @@ private:
     void endGame();
     unsigned int getLinesFilled();
 
-    int** grid_;
+    std::vector<std::vector<int>> grid_;
     int rows_;
     int cols_;
     Shape* currShape_;

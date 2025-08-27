@@ -12,11 +12,6 @@ Grid::Grid(int rows, int cols)
 
 Grid::~Grid()
 {
-    for(int k = 0; k < rows_; ++k)
-    {
-        delete[] grid_[k];
-    }
-    delete[] grid_;
 }
 
 void Grid::generateNewShape()
@@ -74,7 +69,7 @@ bool Grid::canPlaceShape()
 {
     int currR = currentShapePosition_.first; 
     int currC = currentShapePosition_.second; 
-    std::vector<std::vector<int>> shapeGrid = currShape_->getGrid();
+    const std::vector<std::vector<int>>& shapeGrid = currShape_->getGrid();
 
     // loop over shape grid
     for (int i = 0; i < currShape_->rows() ; ++i)
@@ -94,7 +89,7 @@ void Grid::drawShape()
 {
     int currR = currentShapePosition_.first; 
     int currC = currentShapePosition_.second; 
-    std::vector<std::vector<int>> shapeGrid = currShape_->getGrid();
+    const std::vector<std::vector<int>>& shapeGrid = currShape_->getGrid();
 
     // loop over shape grid
     for (int i = 0; i < currShape_->rows() ; ++i)
@@ -114,7 +109,7 @@ int Grid::getShapeWidth()
     // go through each row and count the number of 1's
     // use the max amount
     int maxWidth = 0;
-    std::vector<std::vector<int>> shapeGrid = currShape_->getGrid();
+    const std::vector<std::vector<int>>& shapeGrid = currShape_->getGrid();
     for (int i = 0; i < shapeGrid.size(); ++i)
     {
         int tmpWidth = 0;
@@ -212,7 +207,7 @@ void Grid::clearShape()
 {
     int currR = currentShapePosition_.first; 
     int currC = currentShapePosition_.second; 
-    std::vector<std::vector<int>> shapeGrid = currShape_->getGrid();
+    const std::vector<std::vector<int>>& shapeGrid = currShape_->getGrid();
 
     // loop over shape grid
     for (int i = 0; i < currShape_->rows() ; ++i)
@@ -379,14 +374,25 @@ void Grid::addPenaltyLines(unsigned int lines)
     }
 
     // move everything except for the shape up
-    for (int i = 0; i < rows_ - lines; ++i)
+    for (int i = 0; i < rows_; ++i)
     {
         for (int j = 0; j < cols_; ++j)
         {
-            grid_[i][j] = grid_[i + lines][j];
+            if (i < rows_ - lines)
+            {
+                grid_[i][j] = grid_[i + lines][j];
+            }
+            else
+            {
+                //grid_[i][j] = rand() % 2;
+                grid_[i][j] = 2;
+            }
         }
     }
-    // TODO what is there is a 1's in any of the spots we just redrew in
+
+    
+
+    // TODO what if there is a 1's in any of the spots we just redrew in
     drawShape();
 }
 
@@ -403,12 +409,13 @@ GameInfo Grid::getGameInfo()
     return info;
 }
 
-void Grid::createGrid(int**& grid, int rows, int cols)
+void Grid::createGrid(std::vector<std::vector<int>>& grid, int rows, int cols)
 {
-    grid = new int*[rows];  
+    grid.reserve(rows);
     for (int i = 0; i < rows; ++i)
     {
-        grid[i] = new int[cols]();
+        std::vector<int> row(cols, 0);
+        grid.push_back(row);
     }
 }
 
