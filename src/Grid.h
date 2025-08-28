@@ -38,6 +38,7 @@ public:
     int getRows(){return rows_;};
     int getCols(){return cols_;};
     void addPenaltyLines(unsigned int lines);
+    void clearLinesFilled();
 
 private:
     void createGrid(std::vector<std::vector<int>>& grid, int rows, int cols);
@@ -53,7 +54,7 @@ private:
     void clearFilledLines();
     bool canPlaceShape();
     void endGame();
-    unsigned int getLinesFilled();
+//    unsigned int getLinesFilled();
 
     std::vector<std::vector<int>> grid_;
     int rows_;

@@ -390,8 +390,6 @@ void Grid::addPenaltyLines(unsigned int lines)
         }
     }
 
-    
-
     // TODO what if there is a 1's in any of the spots we just redrew in
     drawShape();
 }
@@ -404,7 +402,7 @@ GameInfo Grid::getGameInfo()
     info.rows = rows_;
     info.cols = cols_;
     info.score = score_;
-    info.linesFilled = getLinesFilled();
+    info.linesFilled = linesFilled_;
     info.isGameOver = isGameOver_;
     return info;
 }
@@ -443,9 +441,16 @@ unsigned int Grid::getScore()
     return score_;
 }
 
+/*
 unsigned int Grid::getLinesFilled()
 {
     unsigned int count = linesFilled_;
     linesFilled_ = 0;
     return count;
+}
+*/
+void Grid::clearLinesFilled()
+{
+    std::lock_guard<std::mutex> guard(myMutex);
+    linesFilled_ = 0;
 }

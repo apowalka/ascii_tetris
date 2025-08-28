@@ -26,7 +26,7 @@ void wait_a_bit() {
 #ifdef WIN32
     Sleep(100);
 #else
-    usleep(1000000);
+    usleep(100000);
 #endif
 }
 
@@ -244,24 +244,30 @@ public:
         info.linesFilled = doc["linesFilled"];
         info.isGameOver = doc["isGameOver"];
 
-        printToWindow(info, win2);
-        wrefresh(win2);
+        if (!info.isGameOver)
+        {
+            printToWindow(info, win2);
+            wrefresh(win2);
+        }
 
         unsigned int lines = doc["linesFilled"];
         if (lines > 0)
         {
             myGrid_->addPenaltyLines(lines);
+            //printToWindow(myGrid_->getGameInfo(), win2);
         }
+
     }
 
-    void telemetry_loop() {
+    void telemetry_loop()
+    {
         uint64_t count = 0;
         std::stringstream val;
         websocketpp::lib::error_code ec;
 
-        while(1) {
+        while(1)
+        {
             bool wait = false;
-
             {
                 scoped_lock guard(m_lock);
                 // If the connection has been closed, stop generating telemetry
@@ -283,14 +289,6 @@ public:
             const std::vector<std::vector<int>>& currGrid = info.grid;
             int rows = info.rows;
             int cols = info.cols;
-            //for (int i = 0; i < rows; ++i)
-            //{
-            //    for (int j = 0; j < cols; ++j)
-            //    {
-            //        val << currGrid[i][j];
-            //    }
-            //    val << std::endl;
-            //}
 
             nlohmann::json doc; 
             //doc["grid"] = val.str();
@@ -300,6 +298,11 @@ public:
             doc["isGameOver"] = info.isGameOver;;
             doc["score"] = info.score;
             doc["linesFilled"] = info.linesFilled;
+
+            if (info.linesFilled > 0)
+            {
+                myGrid_->clearLinesFilled();
+            }
 
             for (int i = 0; i < rows; ++i)
             {
