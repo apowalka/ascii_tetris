@@ -17,7 +17,7 @@ using websocketpp::lib::bind;
 typedef server::message_ptr message_ptr;
 typedef std::set<websocketpp::connection_hdl,std::owner_less<websocketpp::connection_hdl>> con_list;
 
-WINDOW* win;
+//WINDOW* win;
 con_list m_connections;
 
 void on_open(server* s, websocketpp::connection_hdl hdl) {
@@ -37,6 +37,7 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg)
     for (auto con : m_connections)
     {
         server::connection_ptr someCon= s->get_con_from_hdl(con);
+        // echo the data back to all but this connection
         if (currCon != someCon)
         {
             try {
@@ -47,25 +48,9 @@ void on_message(server* s, websocketpp::connection_hdl hdl, message_ptr msg)
             }
         }
     }
-    
-    // @NOTE this is for debugging purposes
-    //const std::string& test = msg->get_payload();
-    ////std::replace( test.begin(), test.end(), '0', ' ');
-    ////std::replace( test.begin(), test.end(), '1', 'X');
-    //mvwprintw(win, 0, 0, "%s", test.c_str());
-    //wrefresh(win);
 }
 
 int main() {
-    initscr();
-    cbreak();
-    win = newwin(40, 20, 0, 0); // height, width, start_y, start_x
-    refresh();
-
-    box(win, 0, 0); // Draw a box around the window
-    //`wprintw(win, "%s", "hellow");
-    wrefresh(win);
-
     // Create a server endpoint
     server echo_server;
 

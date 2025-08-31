@@ -16,7 +16,6 @@
 
 
 // pointer to window that grid will be printed in
-WINDOW* win;
 WINDOW* win2;
 
 /**
@@ -111,7 +110,7 @@ void captureInput(Grid* myGrid)
     }
 }
 
-void refreshScreen(Grid* myGrid)
+void refreshScreen(Grid* myGrid, WINDOW* win)
 {
     while (!myGrid->isGameOver())
     {
@@ -165,6 +164,12 @@ public:
        int rows = 20;
        int cols = 10;
        myGrid_ = new Grid(rows, cols);
+
+       initscr();
+       cbreak();
+       win_  = newwin(40, 20, 0, 0); // height, width, start_y, start_x
+       box(win_, 0, 0); // Draw a box around the window
+       wrefresh(win_);
     }
 
     // This method will block until the connection is complete
@@ -188,7 +193,7 @@ public:
 
         // create game threads
         std::thread capture(captureInput, myGrid_);
-        std::thread refresh(refreshScreen, myGrid_);
+        std::thread refresh(refreshScreen, myGrid_, win_);
         std::thread down(moveDown, myGrid_);
 
         // Create a thread to run the ASIO io_service event loop
@@ -204,6 +209,8 @@ public:
         asio_thread.join();
     }
 
+
+    // TODO consider creating map of connection to WINDOW
     // The open handler will signal that we are ready to start sending telemetry
     void on_open(websocketpp::connection_hdl) {
         //m_client.get_alog().write(websocketpp::log::alevel::app,
@@ -211,6 +218,10 @@ public:
 
         scoped_lock guard(m_lock);
         m_open = true;
+
+        win2  = newwin(40, 20, 0, 30); // height, width, start_y, start_x
+        box(win2, 0, 0); // Draw a box around the window
+        wrefresh(win2);
     }
 
     // The close handler will signal that we should stop sending telemetry
@@ -231,6 +242,7 @@ public:
         m_done = true;
     }
 
+    // consider creating map of connection to WINDOW
     void on_message(websocketpp::connection_hdl hdl, message_ptr msg)
     {
         const std::string& test = msg->get_payload();
@@ -337,22 +349,20 @@ private:
     bool m_open;
     bool m_done;
     Grid* myGrid_;
+    WINDOW* win_;
 };
 
 int main(int argc, char* argv[])
 {
     // create window for grid
-    initscr();
-    cbreak();
-    win  = newwin(40, 20, 0, 0); // height, width, start_y, start_x
-    refresh();
 
-    box(win, 0, 0); // Draw a box around the window
-    wrefresh(win);
+    //win  = newwin(40, 20, 0, 0); // height, width, start_y, start_x
+    //box(win, 0, 0); // Draw a box around the window
+    //wrefresh(win);
 
-    win2  = newwin(40, 20, 0, 30); // height, width, start_y, start_x
-    box(win2, 0, 0); // Draw a box around the window
-    wrefresh(win2);
+    //win2  = newwin(40, 20, 0, 30); // height, width, start_y, start_x
+    //box(win2, 0, 0); // Draw a box around the window
+    //wrefresh(win2);
 
     //start_color();
 
