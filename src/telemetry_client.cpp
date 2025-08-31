@@ -16,7 +16,7 @@
 
 
 // pointer to window that grid will be printed in
-WINDOW* win2;
+//WINDOW* win2;
 
 /**
  * Define a semi-cross platform helper method that waits/sleeps for a bit.
@@ -141,6 +141,7 @@ public:
     typedef websocketpp::client<websocketpp::config::asio_client> client;
     typedef websocketpp::lib::lock_guard<websocketpp::lib::mutex> scoped_lock;
     typedef client::message_ptr message_ptr;
+    typedef std::map<websocketpp::connection_hdl, WINDOW*, std::owner_less<websocketpp::connection_hdl>> con_map;
 
     telemetry_client() : m_open(false),m_done(false) {
         // set up access channels to only log interesting things
@@ -212,16 +213,21 @@ public:
 
     // TODO consider creating map of connection to WINDOW
     // The open handler will signal that we are ready to start sending telemetry
-    void on_open(websocketpp::connection_hdl) {
+    void on_open(websocketpp::connection_hdl hdl)
+    {
         //m_client.get_alog().write(websocketpp::log::alevel::app,
         //    "Connection opened, starting telemetry!");
 
         scoped_lock guard(m_lock);
         m_open = true;
 
-        win2  = newwin(40, 20, 0, 30); // height, width, start_y, start_x
-        box(win2, 0, 0); // Draw a box around the window
-        wrefresh(win2);
+        if (auto con = versusPlayers_.find(hdl); con == versusPlayers_.end())
+        {
+            WINDOW* playWin  = newwin(40, 20, 0, 30); // height, width, start_y, start_x
+            box(playWin, 0, 0); // Draw a box around the window
+            //wrefresh(win2);
+            versusPlayers_.insert({hdl, playWin});
+        }
     }
 
     // The close handler will signal that we should stop sending telemetry
@@ -258,8 +264,9 @@ public:
 
         if (!info.isGameOver)
         {
-            printToWindow(info, win2);
-            wrefresh(win2);
+            auto elem = versusPlayers_.find(hdl);
+            printToWindow(info, elem->second);
+            wrefresh(elem->second);
         }
 
         unsigned int lines = doc["linesFilled"];
@@ -350,6 +357,7 @@ private:
     bool m_done;
     Grid* myGrid_;
     WINDOW* win_;
+    con_map versusPlayers_;
 };
 
 int main(int argc, char* argv[])
