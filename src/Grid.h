@@ -24,6 +24,7 @@ struct GameInfo
     unsigned int score = 0;
     unsigned int linesFilled = 0;
     bool isGameOver = false;
+    unsigned int gameId = 0;
 };
 
 class Grid
@@ -65,6 +66,7 @@ private:
     bool isGameOver_ = false;
     unsigned int score_ = 0;
     unsigned int linesFilled_ = 0;
+    unsigned int gameId_ = 0;
 };
 
 #endif

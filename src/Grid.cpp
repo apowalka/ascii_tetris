@@ -8,6 +8,8 @@ Grid::Grid(int rows, int cols)
     createGrid(grid_, rows_, cols_);
     setInitialPattern();
     generateNewShape();
+    srand (time(NULL));
+    gameId_ = rand() % 10000;
 }
 
 Grid::~Grid()
@@ -404,6 +406,7 @@ GameInfo Grid::getGameInfo()
     info.score = score_;
     info.linesFilled = linesFilled_;
     info.isGameOver = isGameOver_;
+    info.gameId = gameId_;
     return info;
 }
 

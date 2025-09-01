@@ -14,9 +14,7 @@
 
 #include <nlohmann/json.hpp>
 
-
-// pointer to window that grid will be printed in
-//WINDOW* win2;
+int xStart = 20;
 
 /**
  * Define a semi-cross platform helper method that waits/sleeps for a bit.
@@ -69,9 +67,11 @@ void printToWindow(const GameInfo& info, WINDOW* myWin)
     int cols       = info.cols;
     int score      = info.score;
     int isGameOver = info.isGameOver;
+    int gameId = info.gameId;
 
     mvwprintw(myWin, 2, 1, "%s", "Welcome to Artris");
     mvwprintw(myWin, 3, 1, "%s %d", "Score: ", score);
+    mvwprintw(myWin, 3, 1, "%s %d", "GameId: ", gameId);
 
     int rowOffset = 5;
     int colOffset = 5;
@@ -141,7 +141,7 @@ public:
     typedef websocketpp::client<websocketpp::config::asio_client> client;
     typedef websocketpp::lib::lock_guard<websocketpp::lib::mutex> scoped_lock;
     typedef client::message_ptr message_ptr;
-    typedef std::map<websocketpp::connection_hdl, WINDOW*, std::owner_less<websocketpp::connection_hdl>> con_map;
+    //typedef std::map<websocketpp::connection_hdl, WINDOW*, std::owner_less<websocketpp::connection_hdl>> con_map;
 
     telemetry_client() : m_open(false),m_done(false) {
         // set up access channels to only log interesting things
@@ -168,6 +168,7 @@ public:
 
        initscr();
        cbreak();
+       // this window is for the current player
        win_  = newwin(40, 20, 0, 0); // height, width, start_y, start_x
        box(win_, 0, 0); // Draw a box around the window
        wrefresh(win_);
@@ -210,8 +211,6 @@ public:
         asio_thread.join();
     }
 
-
-    // TODO consider creating map of connection to WINDOW
     // The open handler will signal that we are ready to start sending telemetry
     void on_open(websocketpp::connection_hdl hdl)
     {
@@ -221,13 +220,14 @@ public:
         scoped_lock guard(m_lock);
         m_open = true;
 
-        if (auto con = versusPlayers_.find(hdl); con == versusPlayers_.end())
-        {
-            WINDOW* playWin  = newwin(40, 20, 0, 30); // height, width, start_y, start_x
-            box(playWin, 0, 0); // Draw a box around the window
-            //wrefresh(win2);
-            versusPlayers_.insert({hdl, playWin});
-        }
+        //if (auto con = versusPlayers_.find(hdl); con == versusPlayers_.end())
+        //{
+        //    WINDOW* playWin = newwin(40, 20, 0, xStart); // height, width, start_y, start_x
+        //    xStart += 40;
+        //    box(playWin, 0, 0); // Draw a box around the window
+        //    //wrefresh(win2);
+        //    versusPlayers_.insert({hdl, playWin});
+        //}
     }
 
     // The close handler will signal that we should stop sending telemetry
@@ -261,19 +261,31 @@ public:
         info.score = doc["score"];
         info.linesFilled = doc["linesFilled"];
         info.isGameOver = doc["isGameOver"];
+        info.gameId = doc["gameId"];
 
         if (!info.isGameOver)
         {
-            auto elem = versusPlayers_.find(hdl);
-            printToWindow(info, elem->second);
-            wrefresh(elem->second);
+            if (auto elem = uuidToWindow_.find(info.gameId); elem != uuidToWindow_.end())
+            {
+                printToWindow(info, elem->second);
+                wrefresh(elem->second);
+            }
+            else
+            {
+                WINDOW* playWin = newwin(40, 20, 0, xStart); // height, width, start_y, start_x
+                xStart += 20;
+                box(playWin, 0, 0); // Draw a box around the window
+                //wrefresh(win2);
+                uuidToWindow_.insert({info.gameId, playWin});   
+                printToWindow(info, playWin);
+                wrefresh(playWin);
+            }
         }
 
         unsigned int lines = doc["linesFilled"];
         if (lines > 0)
         {
             myGrid_->addPenaltyLines(lines);
-            //printToWindow(myGrid_->getGameInfo(), win2);
         }
 
     }
@@ -317,6 +329,7 @@ public:
             doc["isGameOver"] = info.isGameOver;;
             doc["score"] = info.score;
             doc["linesFilled"] = info.linesFilled;
+            doc["gameId"] = info.gameId;
 
             if (info.linesFilled > 0)
             {
@@ -357,7 +370,8 @@ private:
     bool m_done;
     Grid* myGrid_;
     WINDOW* win_;
-    con_map versusPlayers_;
+    //con_map versusPlayers_;
+    std::map<unsigned int, WINDOW*> uuidToWindow_;
 };
 
 int main(int argc, char* argv[])
