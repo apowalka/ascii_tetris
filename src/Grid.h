@@ -4,6 +4,7 @@
 #include <string>
 #include <cstring>
 #include <vector>
+#include <queue>
 #include <mutex>
 #include <cstdint>
 #include <algorithm>
@@ -46,9 +47,12 @@ private:
     void setInitialPattern();
     int getShapeWidth();
     void generateNewShape();
-    void drawShape();
+    void playNewShape();
+    void drawCurrentShape();
+    void draw(int row, int col, const Shape& myShape);
     void moveShape(std::pair<int,int> unitDir);
-    void clearShape();
+    void clearCurrentShape();
+    void clearShape(int row, int col, const Shape& myShape);
     void rotateShape();
     bool isRotateBlocked();
     bool isMovementBlocked(std::pair<int,int> unitDir);
@@ -60,7 +64,8 @@ private:
     std::vector<std::vector<int>> grid_;
     int rows_;
     int cols_;
-    Shape* currShape_;
+    Shape currShape_;
+    std::queue<Shape> shapeQueue_;
     std::pair<int, int> currentShapePosition_;
     std::mutex myMutex;
     bool isGameOver_ = false;

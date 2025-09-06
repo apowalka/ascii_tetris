@@ -8,6 +8,7 @@ Grid::Grid(int rows, int cols)
     createGrid(grid_, rows_, cols_);
     setInitialPattern();
     generateNewShape();
+    playNewShape();
     srand (time(NULL));
     gameId_ = rand() % 10000;
 }
@@ -18,43 +19,51 @@ Grid::~Grid()
 
 void Grid::generateNewShape()
 {
-    int shapeNum = rand() % 8;
+    int shapeNum = rand() % 7;
+    Shape* newShape;
     if (shapeNum == 0)
     {
-        currShape_ = new SquareShape();
+        newShape = new SquareShape();
     }
     else if (shapeNum == 1)
     {
-        currShape_ = new JShape();
+        newShape = new JShape();
     }
     else if (shapeNum == 2)
     {
-        currShape_ = new LShape();
+        newShape = new LShape();
     }
     else if (shapeNum == 3)
     {
-        currShape_ = new TShape();
+        newShape = new TShape();
     }
     else if (shapeNum == 4)
     {
-        currShape_ = new TShape();
+        newShape = new ZShape();
     }
     else if (shapeNum == 5)
     {
-        currShape_ = new ZShape();
+        newShape = new SShape();
     }
-    else if (shapeNum == 6)
+    else //if (shapeNum == 6)
     {
-        currShape_ = new SShape();
+        newShape = new IShape();
     }
-    else if (shapeNum == 7)
-    {
-        currShape_ = new IShape();
-    }
-    currentShapePosition_ = { 0, cols_/2};
+    shapeQueue_.push(*newShape);
+}
+
+void Grid::playNewShape()
+{
+    generateNewShape();
+    clearShape(0, cols_/2, shapeQueue_.front());
+    draw(0, cols_/2, shapeQueue_.back());
+    currShape_ = shapeQueue_.front();
+    shapeQueue_.pop();
+
+    currentShapePosition_ = { 5, cols_/2};
     if (canPlaceShape())
     {
-        drawShape();
+        drawCurrentShape();
     }
     else
     {
@@ -71,12 +80,12 @@ bool Grid::canPlaceShape()
 {
     int currR = currentShapePosition_.first; 
     int currC = currentShapePosition_.second; 
-    const std::vector<std::vector<int>>& shapeGrid = currShape_->getGrid();
+    const std::vector<std::vector<int>>& shapeGrid = currShape_.getGrid();
 
     // loop over shape grid
-    for (int i = 0; i < currShape_->rows() ; ++i)
+    for (int i = 0; i < currShape_.rows() ; ++i)
     {
-        for (int j = 0; j < currShape_->cols(); ++j)
+        for (int j = 0; j < currShape_.cols(); ++j)
         {
             if (shapeGrid.at(i).at(j) == 1 && grid_[currR + i][currC + j] == 1)
             {
@@ -87,20 +96,27 @@ bool Grid::canPlaceShape()
     return true;
 }
 
-void Grid::drawShape()
+void Grid::drawCurrentShape()
 {
     int currR = currentShapePosition_.first; 
     int currC = currentShapePosition_.second; 
-    const std::vector<std::vector<int>>& shapeGrid = currShape_->getGrid();
+    draw(currR, currC, currShape_);
+}
+
+void Grid::draw(int row, int col, const Shape& myShape)
+{
+    const std::vector<std::vector<int>>& shapeGrid = myShape.getGrid();
 
     // loop over shape grid
-    for (int i = 0; i < currShape_->rows() ; ++i)
+    const int rows = myShape.rows();
+    const int cols = myShape.cols();
+    for (int i = 0; i < rows; ++i)
     {
-        for (int j = 0; j < currShape_->cols(); ++j)
+        for (int j = 0; j < cols; ++j)
         {
             if (shapeGrid.at(i).at(j) == 1)
             {
-                grid_[currR + i][currC + j] = shapeGrid.at(i).at(j);
+                grid_[row + i][col + j] = shapeGrid.at(i).at(j);
             }
         }
     }
@@ -111,7 +127,7 @@ int Grid::getShapeWidth()
     // go through each row and count the number of 1's
     // use the max amount
     int maxWidth = 0;
-    const std::vector<std::vector<int>>& shapeGrid = currShape_->getGrid();
+    const std::vector<std::vector<int>>& shapeGrid = currShape_.getGrid();
     for (int i = 0; i < shapeGrid.size(); ++i)
     {
         int tmpWidth = 0;
@@ -134,14 +150,14 @@ int Grid::getShapeWidth()
 // then redraw the shapea back where it was originally
 bool Grid::isMovementBlocked(std::pair<int,int> unitDir)
 {
-    int rows = currShape_->rows();
-    int cols = currShape_->cols();
-    auto shapeGrid = currShape_->getGrid();
+    int rows = currShape_.rows();
+    int cols = currShape_.cols();
+    auto shapeGrid = currShape_.getGrid();
 
     int currR = currentShapePosition_.first + unitDir.first; 
     int currC = currentShapePosition_.second + unitDir.second; 
 
-    clearShape();
+    clearCurrentShape();
     for (int i = 0; i < rows; ++i)
     {
         for (int j = 0; j < cols; ++j)
@@ -151,21 +167,21 @@ bool Grid::isMovementBlocked(std::pair<int,int> unitDir)
                 if ( currR + i > rows_-1 || currC + j > cols_-1 || currC + j < 0
                     || grid_[currR + i][currC + j] == 1)
                 {
-                    drawShape();
+                    drawCurrentShape();
                     return true;
                 }
             }
         }
     }   
     
-    drawShape();
+    drawCurrentShape();
     return false;
 }
 
 bool Grid::isRotateBlocked()
 {
     // make copy to test rotation
-    Shape myShape(*currShape_);
+    Shape myShape(currShape_);
     myShape.rotate();
     int rows = myShape.rows();
     int cols = myShape.cols();
@@ -174,7 +190,7 @@ bool Grid::isRotateBlocked()
     int currR = currentShapePosition_.first; 
     int currC = currentShapePosition_.second; 
 
-    clearShape();
+    clearCurrentShape();
     for (int i = 0; i < rows; ++i)
     {
         for (int j = 0; j < cols; ++j)
@@ -184,41 +200,48 @@ bool Grid::isRotateBlocked()
                 if ( currR + i > rows_-1 || currC + j > cols_-1 || currC + j < 0
                     || (grid_[currR + i][currC + j] == 1))
                 {
-                    drawShape();
+                    drawCurrentShape();
                     return true;
                 }
             }
         }
     }
 
-    drawShape();
+    drawCurrentShape();
     return false;
 }
 
 void Grid::moveShape(std::pair<int,int> unitDir)
 {
     std::pair<int, int> currPos = currentShapePosition_;
-    clearShape();
+    clearCurrentShape();
     
     currentShapePosition_ 
         = {currPos.first + unitDir.first, currPos.second + unitDir.second};
-    drawShape();
+    drawCurrentShape();
 }
 
-void Grid::clearShape()
+void Grid::clearCurrentShape()
 {
     int currR = currentShapePosition_.first; 
     int currC = currentShapePosition_.second; 
-    const std::vector<std::vector<int>>& shapeGrid = currShape_->getGrid();
+    clearShape(currR, currC, currShape_);
+}
+
+void Grid::clearShape(int row, int col, const Shape& myShape)
+{
+    const std::vector<std::vector<int>>& shapeGrid = myShape.getGrid();
 
     // loop over shape grid
-    for (int i = 0; i < currShape_->rows() ; ++i)
+    const int rows = myShape.rows();
+    const int cols = myShape.cols();
+    for (int i = 0; i < rows ; ++i)
     {
-        for (int j = 0; j < currShape_->cols(); ++j)
+        for (int j = 0; j < cols; ++j)
         {
             if (shapeGrid.at(i).at(j) == 1)
             {
-                grid_[currR + i][currC + j] = 0;
+                grid_[row + i][col + j] = 0;
             }
         }
     }
@@ -226,9 +249,9 @@ void Grid::clearShape()
 
 void Grid::rotateShape()
 {
-    clearShape();
-    currShape_->rotate();
-    drawShape();
+    clearCurrentShape();
+    currShape_.rotate();
+    drawCurrentShape();
 }
 
 
@@ -271,7 +294,7 @@ bool Grid::updateShape(char dir)
         else
         {
             clearFilledLines();
-            generateNewShape();
+            playNewShape();
         }
     }
     else if (dir == 'm') // rotate
@@ -356,7 +379,7 @@ void Grid::addPenaltyLines(unsigned int lines)
 {
     std::lock_guard<std::mutex> guard(myMutex);
     // need to clear shape. It would also get moved up otherwise.
-    clearShape();
+    clearCurrentShape();
 
     // check if moving up causes game to end
     for (int i = 0; i < lines; ++i)
@@ -393,7 +416,7 @@ void Grid::addPenaltyLines(unsigned int lines)
     }
 
     // TODO what if there is a 1's in any of the spots we just redrew in
-    drawShape();
+    drawCurrentShape();
 }
 
 GameInfo Grid::getGameInfo()

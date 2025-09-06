@@ -141,7 +141,6 @@ public:
     typedef websocketpp::client<websocketpp::config::asio_client> client;
     typedef websocketpp::lib::lock_guard<websocketpp::lib::mutex> scoped_lock;
     typedef client::message_ptr message_ptr;
-    //typedef std::map<websocketpp::connection_hdl, WINDOW*, std::owner_less<websocketpp::connection_hdl>> con_map;
 
     telemetry_client() : m_open(false),m_done(false) {
         // set up access channels to only log interesting things
@@ -162,7 +161,7 @@ public:
         m_client.set_fail_handler(bind(&telemetry_client::on_fail,this,_1));
         m_client.set_message_handler(bind(&telemetry_client::on_message,this,_1,_2));
 
-       int rows = 20;
+       int rows = 30;
        int cols = 10;
        myGrid_ = new Grid(rows, cols);
 
@@ -180,8 +179,8 @@ public:
         websocketpp::lib::error_code ec;
         client::connection_ptr con = m_client.get_connection(uri, ec);
         if (ec) {
-            m_client.get_alog().write(websocketpp::log::alevel::app,
-                    "Get Connection Error: "+ec.message());
+            //m_client.get_alog().write(websocketpp::log::alevel::app,
+            //        "Get Connection Error: "+ec.message());
             return;
         }
 
@@ -219,15 +218,6 @@ public:
 
         scoped_lock guard(m_lock);
         m_open = true;
-
-        //if (auto con = versusPlayers_.find(hdl); con == versusPlayers_.end())
-        //{
-        //    WINDOW* playWin = newwin(40, 20, 0, xStart); // height, width, start_y, start_x
-        //    xStart += 40;
-        //    box(playWin, 0, 0); // Draw a box around the window
-        //    //wrefresh(win2);
-        //    versusPlayers_.insert({hdl, playWin});
-        //}
     }
 
     // The close handler will signal that we should stop sending telemetry
@@ -275,7 +265,6 @@ public:
                 WINDOW* playWin = newwin(40, 20, 0, xStart); // height, width, start_y, start_x
                 xStart += 20;
                 box(playWin, 0, 0); // Draw a box around the window
-                //wrefresh(win2);
                 uuidToWindow_.insert({info.gameId, playWin});   
                 printToWindow(info, playWin);
                 wrefresh(playWin);
@@ -322,7 +311,6 @@ public:
             int cols = info.cols;
 
             nlohmann::json doc; 
-            //doc["grid"] = val.str();
             doc["grid"] = nlohmann::json::array();
             doc["rows"] = rows;
             doc["cols"] = cols;
@@ -354,8 +342,8 @@ public:
             // closing. While many errors here can be easily recovered from,
             // in this simple example, we'll stop the telemetry loop.
             if (ec) {
-                m_client.get_alog().write(websocketpp::log::alevel::app,
-                    "Send Error: "+ec.message());
+                //m_client.get_alog().write(websocketpp::log::alevel::app,
+                //    "Send Error: "+ec.message());
                 break;
             }
 
@@ -369,32 +357,18 @@ private:
     bool m_open;
     bool m_done;
     Grid* myGrid_;
-    WINDOW* win_;
-    //con_map versusPlayers_;
-    std::map<unsigned int, WINDOW*> uuidToWindow_;
+    WINDOW* win_; //current player
+    std::map<unsigned int, WINDOW*> uuidToWindow_; // other players
 };
 
 int main(int argc, char* argv[])
 {
-    // create window for grid
-
-    //win  = newwin(40, 20, 0, 0); // height, width, start_y, start_x
-    //box(win, 0, 0); // Draw a box around the window
-    //wrefresh(win);
-
-    //win2  = newwin(40, 20, 0, 30); // height, width, start_y, start_x
-    //box(win2, 0, 0); // Draw a box around the window
-    //wrefresh(win2);
-
-    //start_color();
-
-    telemetry_client c;
-
     std::string uri = "ws://localhost:9002";
 
     if (argc == 2) {
         uri = argv[1];
     }
 
+    telemetry_client c;
     c.run(uri);
 }
