@@ -72,6 +72,7 @@ private:
     unsigned int score_ = 0;
     unsigned int linesFilled_ = 0;
     unsigned int gameId_ = 0;
+    const int ROW_START = 5;
 };
 
 #endif

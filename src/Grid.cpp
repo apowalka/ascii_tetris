@@ -54,13 +54,13 @@ void Grid::generateNewShape()
 
 void Grid::playNewShape()
 {
-    generateNewShape();
-    clearShape(0, cols_/2, shapeQueue_.front());
-    draw(0, cols_/2, shapeQueue_.back());
     currShape_ = shapeQueue_.front();
     shapeQueue_.pop();
+    generateNewShape();
+    clearShape(0, cols_ / 2, currShape_);
+    draw(0, cols_ / 2, shapeQueue_.front());
 
-    currentShapePosition_ = { 5, cols_/2};
+    currentShapePosition_ = { ROW_START, cols_ / 2};
     if (canPlaceShape())
     {
         drawCurrentShape();
@@ -235,7 +235,7 @@ void Grid::clearShape(int row, int col, const Shape& myShape)
     // loop over shape grid
     const int rows = myShape.rows();
     const int cols = myShape.cols();
-    for (int i = 0; i < rows ; ++i)
+    for (int i = 0; i < rows; ++i)
     {
         for (int j = 0; j < cols; ++j)
         {
@@ -341,7 +341,7 @@ bool Grid::updateShape(char dir)
 
 void Grid::clearFilledLines()
 {
-    for (int i = rows_ - 1; i >= 0; --i)
+    for (int i = rows_ - 1; i >= ROW_START; --i)
     {
         bool isFilled = true;
         for (int j = 0; j < cols_; ++j)
@@ -362,7 +362,7 @@ void Grid::clearFilledLines()
                 grid_[i][j] = 0;
             }
             //usleep(100000);
-            for (int ii = i; ii - 1 >= 0; --ii)
+            for (int ii = i; ii - 1 >= ROW_START; --ii)
             {
                 for (int jj = 0; jj < cols_; ++jj)
                 {
