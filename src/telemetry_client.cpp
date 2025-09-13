@@ -71,7 +71,7 @@ void printToWindow(const GameInfo& info, WINDOW* myWin)
 
     mvwprintw(myWin, 2, 1, "%s", "Welcome to Artris");
     mvwprintw(myWin, 3, 1, "%s %d", "Score: ", score);
-    mvwprintw(myWin, 3, 1, "%s %d", "GameId: ", gameId);
+    mvwprintw(myWin, 4, 1, "%s %d", "GameId: ", gameId);
 
     int rowOffset = 5;
     int colOffset = 5;
@@ -171,6 +171,17 @@ public:
        win_  = newwin(40, 20, 0, 0); // height, width, start_y, start_x
        box(win_, 0, 0); // Draw a box around the window
        wrefresh(win_);
+    }
+
+    void run()
+    {
+        // create game threads
+        std::thread capture(captureInput, myGrid_);
+        std::thread refresh(refreshScreen, myGrid_, win_);
+        std::thread down(moveDown, myGrid_);
+        capture.join();
+        refresh.join();
+        down.join();
     }
 
     // This method will block until the connection is complete
@@ -363,12 +374,35 @@ private:
 
 int main(int argc, char* argv[])
 {
+    std::string playerCount = "2";
     std::string uri = "ws://localhost:9002";
 
-    if (argc == 2) {
-        uri = argv[1];
+    if (argc == 2)
+    {
+        playerCount = argv[1];
+        if (playerCount != "1")
+        {
+            std::cout << "Must specify server uri for more than 1 player" << std::endl;
+            std::cout << "e.g. ./tetris <number of players> <ws://localhost:9002>" << std::endl;
+            exit(0);
+        }
+    }
+    else if (argc == 3)
+    {
+        playerCount = argv[1];
+        uri = argv[2];
     }
 
     telemetry_client c;
-    c.run(uri);
+    if (playerCount == "1")
+    {
+        c.run();
+    }
+    else
+    {
+        c.run(uri);
+    }
+
+
+
 }
