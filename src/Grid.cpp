@@ -52,13 +52,30 @@ void Grid::generateNewShape()
     shapeQueue_.push(*newShape);
 }
 
+// TODO there is a bug where completing a new line will move the next shape up on the opponents screen.
+// sol: before checking for completed lines, clear the next shape and the write it back in
 void Grid::playNewShape()
 {
+    // add new shape to shape queue
+    generateNewShape();
+
+    // clear the old next shape from grid since it will become current shape
+    if (nextShapePosition_.first != -1)
+    {
+        clearShape(nextShapePosition_.first , nextShapePosition_.second, nextShape_);
+    }
+
+    // get new shape to play from front of queue
     currShape_ = shapeQueue_.front();
     shapeQueue_.pop();
-    generateNewShape();
-    clearShape(0, cols_ / 2, currShape_);
-    draw(0, cols_ / 2, shapeQueue_.front());
+
+    // set next shape as the following shape in the queue
+    nextShape_ = shapeQueue_.front();
+    nextShapePosition_ = { 0, cols_ / 2};
+
+    // draw next shape on grid
+    draw(nextShapePosition_.first , nextShapePosition_.second, nextShape_);
+
 
     currentShapePosition_ = { ROW_START, cols_ / 2};
     if (canPlaceShape())
@@ -101,6 +118,11 @@ void Grid::drawCurrentShape()
     int currR = currentShapePosition_.first; 
     int currC = currentShapePosition_.second; 
     draw(currR, currC, currShape_);
+}
+
+void Grid::drawNextShape()
+{
+    draw(nextShapePosition_.first , nextShapePosition_.second, nextShape_);
 }
 
 void Grid::draw(int row, int col, const Shape& myShape)
@@ -226,6 +248,11 @@ void Grid::clearCurrentShape()
     int currR = currentShapePosition_.first; 
     int currC = currentShapePosition_.second; 
     clearShape(currR, currC, currShape_);
+}
+
+void Grid::clearNextShape()
+{
+    clearShape(nextShapePosition_.first, nextShapePosition_.second, nextShape_);
 }
 
 void Grid::clearShape(int row, int col, const Shape& myShape)
@@ -355,6 +382,7 @@ void Grid::clearFilledLines()
         // clear row
         if (isFilled)
         {
+            clearNextShape();
             ++score_; 
             ++linesFilled_;
             for (int j = 0; j < cols_; ++j)
@@ -362,15 +390,17 @@ void Grid::clearFilledLines()
                 grid_[i][j] = 0;
             }
             //usleep(100000);
-            for (int ii = i; ii - 1 >= ROW_START; --ii)
+            //for (int ii = i; ii - 1 >= ROW_START; --ii)
+            for (int ii = i; ii - 1 >= 0; --ii)
             {
                 for (int jj = 0; jj < cols_; ++jj)
                 {
                     grid_[ii][jj] = grid_[ii-1][jj];
                 }
             }
-            // go back and check the line we copied into the clearned line memory
+            // go back and check the line we copied into the cleared line memory
             ++i;
+            drawNextShape();
         }
     }
 }
@@ -380,6 +410,7 @@ void Grid::addPenaltyLines(unsigned int lines)
     std::lock_guard<std::mutex> guard(myMutex);
     // need to clear shape. It would also get moved up otherwise.
     clearCurrentShape();
+    clearNextShape();
 
     // check if moving up causes game to end
     for (int i = 0; i < lines; ++i)
@@ -417,6 +448,7 @@ void Grid::addPenaltyLines(unsigned int lines)
 
     // TODO what if there is a 1's in any of the spots we just redrew in
     drawCurrentShape();
+    drawNextShape();
 }
 
 GameInfo Grid::getGameInfo()

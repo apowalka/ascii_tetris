@@ -49,9 +49,11 @@ private:
     void generateNewShape();
     void playNewShape();
     void drawCurrentShape();
+    void drawNextShape();
     void draw(int row, int col, const Shape& myShape);
     void moveShape(std::pair<int,int> unitDir);
     void clearCurrentShape();
+    void clearNextShape();
     void clearShape(int row, int col, const Shape& myShape);
     void rotateShape();
     bool isRotateBlocked();
@@ -65,8 +67,10 @@ private:
     int rows_;
     int cols_;
     Shape currShape_;
-    std::queue<Shape> shapeQueue_;
     std::pair<int, int> currentShapePosition_;
+    Shape nextShape_;
+    std::pair<int, int> nextShapePosition_ = {-1, -1};
+    std::queue<Shape> shapeQueue_;
     std::mutex myMutex;
     bool isGameOver_ = false;
     unsigned int score_ = 0;

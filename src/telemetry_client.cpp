@@ -2,6 +2,7 @@
 #include "Shape.h"
 #include "Utility.h"
 #include <thread>
+#include <fstream>
 
 #include <websocketpp/config/asio_no_tls_client.hpp>
 #include <websocketpp/client.hpp>
@@ -69,6 +70,7 @@ void printToWindow(const GameInfo& info, WINDOW* myWin)
     int isGameOver = info.isGameOver;
     int gameId = info.gameId;
 
+    //wattron(myWin, COLOR_PAIR(1));
     mvwprintw(myWin, 2, 1, "%s", "Welcome to Artris");
     mvwprintw(myWin, 3, 1, "%s %d", "Score: ", score);
     mvwprintw(myWin, 4, 1, "%s %d", "GameId: ", gameId);
@@ -151,6 +153,8 @@ public:
 
         // Initialize the Asio transport policy
         m_client.init_asio();
+        m_client.get_alog().set_ostream(&logFile_);
+        m_client.get_elog().set_ostream(&logFile_);
 
         // Bind the handlers we are using
         using websocketpp::lib::placeholders::_1;
@@ -167,10 +171,19 @@ public:
 
        initscr();
        cbreak();
+       if (has_colors() == FALSE) {
+           endwin();
+           printf("Your terminal does not support color\n");
+           exit(1);
+       }
+       start_color();
+       init_pair(1, COLOR_RED, COLOR_BLUE);
        // this window is for the current player
        win_  = newwin(40, 20, 0, 0); // height, width, start_y, start_x
        box(win_, 0, 0); // Draw a box around the window
+       wattron(win_, COLOR_PAIR(1));
        wrefresh(win_);
+       logFile_.open("artris.logs");
     }
 
     void run()
@@ -273,9 +286,11 @@ public:
             }
             else
             {
+                init_pair(2, COLOR_YELLOW, COLOR_GREEN);
                 WINDOW* playWin = newwin(40, 20, 0, xStart); // height, width, start_y, start_x
                 xStart += 20;
                 box(playWin, 0, 0); // Draw a box around the window
+                wattron(playWin, COLOR_PAIR(2));
                 uuidToWindow_.insert({info.gameId, playWin});   
                 printToWindow(info, playWin);
                 wrefresh(playWin);
@@ -370,6 +385,7 @@ private:
     Grid* myGrid_;
     WINDOW* win_; //current player
     std::map<unsigned int, WINDOW*> uuidToWindow_; // other players
+    std::ofstream logFile_;
 };
 
 int main(int argc, char* argv[])
