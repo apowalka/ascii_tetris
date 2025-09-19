@@ -6,14 +6,30 @@
 class Shape
 {
 public:
+    Shape()
+    {
+    }
+
     Shape(std::vector<std::vector<int>> pattern)
     {
         shapeGrid_ = pattern;
     }
+
     Shape(const Shape& myShape)
         :shapeGrid_(myShape.getGrid())
     {
     }
+
+    Shape operator=(const Shape& myShape)
+    {
+        if (this == &myShape)
+        {
+            return *this;
+        }
+        shapeGrid_ = myShape.getGrid();
+        return *this;
+    }
+
     virtual ~Shape(){}
 
     int rows() const { return shapeGrid_.size(); }
