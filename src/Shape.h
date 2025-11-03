@@ -36,27 +36,16 @@ public:
     int cols() const { return shapeGrid_.at(0).size(); }
     std::vector<std::vector<int>> getGrid() const { return shapeGrid_; }
 
-    // TODO do this in place
     void rotate()
     {
-        const int currRows = rows();
-        const int currCols = cols();
-        std::vector<std::vector<int>> newShapeGrid;
-        newShapeGrid.resize(currCols);
-        for (int i = 0; i < newShapeGrid.size(); ++i)
+        std::reverse(shapeGrid_.begin(), shapeGrid_.end());
+        for (int i = 0; i < shapeGrid_.size(); ++i)
         {
-            newShapeGrid.at(i).resize(currRows);    
-        }
-
-        for (int i = 0; i < currRows; ++i)
-        {
-            for (int j = 0; j < currCols; ++j)
+            for (int j = i + 1; j < shapeGrid_[i].size(); ++j)
             {
-                newShapeGrid.at(j).at(currRows - 1 - i) = shapeGrid_.at(i).at(j);
+                std::swap(shapeGrid_[i][j], shapeGrid_[j][i]);
             }
         }
-
-        shapeGrid_ = newShapeGrid;
     }
 
 private:
@@ -98,7 +87,7 @@ class SquareShape : public Shape
 {
 public:
     SquareShape()
-        : Shape({ {1, 1},{1, 1} })
+        : Shape({ {0,0,0,0},{0,1,1,0},{0,1,1,0},{0,0,0,0} })
     {
     }
     ~SquareShape(){}
@@ -108,7 +97,7 @@ class JShape : public Shape
 {
 public:
     JShape()
-        : Shape({ {0, 0, 0}, {1, 1, 1}, {0, 0, 1} })
+        : Shape({ {0, 0, 0, 0}, {0, 1, 1, 1}, {0, 0, 0, 1}, {0,0,0,0} })
     {
     }
     ~JShape(){}
@@ -118,7 +107,7 @@ class LShape : public Shape
 {
 public:
     LShape()
-        : Shape({ {0, 0, 0}, {1, 1, 1}, {1, 0, 0} })
+        : Shape({ {0, 0, 0, 0}, {0, 1, 1, 1}, {0, 1, 0, 0}, {0, 0, 0, 0} })
     {
     }
     ~LShape(){}
@@ -128,7 +117,7 @@ class ZShape : public Shape
 {
 public:
     ZShape()
-        : Shape({ {0, 0, 0}, {1, 1, 0},{0, 1, 1} })
+        : Shape({ {0, 0, 0, 0}, {0, 1, 1, 0},{0, 0, 1, 1}, {0,0,0,0} })
     {
     }
     ~ZShape(){}
@@ -138,7 +127,7 @@ class SShape : public Shape
 {
 public:
     SShape()
-        : Shape({ {0, 0, 0}, {0, 1, 1}, {1, 1, 0} })
+        : Shape({ {0, 0, 0, 0}, {0, 0, 1, 1}, {0, 1, 1, 0}, {0,0,0,0} })
     {
     }
     ~SShape(){}
@@ -148,7 +137,7 @@ class TShape : public Shape
 {
 public:
     TShape()
-        : Shape({ {0, 0, 0}, {1, 1, 1}, {0, 1, 0} })
+        : Shape({ {0, 0, 0, 0}, {0, 1, 1, 1}, {0, 0, 1, 0}, {0,0,0,0} })
     {
     }
     ~TShape(){}
