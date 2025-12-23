@@ -45,7 +45,7 @@ public:
 private:
     void createGrid(std::vector<std::vector<int>>& grid, int rows, int cols);
     void setInitialPattern();
-    int getShapeWidth();
+    //int getShapeWidth();
     void generateNewShape();
     void playNewShape();
     void drawCurrentShape();

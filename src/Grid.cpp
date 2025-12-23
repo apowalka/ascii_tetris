@@ -1,5 +1,6 @@
 #include <random>
 #include <vector>
+#include <memory>
 #include "Grid.h"
 
 Grid::Grid(int rows, int cols)
@@ -20,34 +21,34 @@ Grid::~Grid()
 void Grid::generateNewShape()
 {
     int shapeNum = rand() % 7;
-    Shape* newShape;
+    std::unique_ptr<Shape> newShape;
     if (shapeNum == 0)
     {
-        newShape = new SquareShape();
+        newShape = std::make_unique<SquareShape>();
     }
     else if (shapeNum == 1)
     {
-        newShape = new JShape();
+        newShape = std::make_unique<JShape>();
     }
     else if (shapeNum == 2)
     {
-        newShape = new LShape();
+        newShape = std::make_unique<LShape>();
     }
     else if (shapeNum == 3)
     {
-        newShape = new TShape();
+        newShape = std::make_unique<TShape>();
     }
     else if (shapeNum == 4)
     {
-        newShape = new ZShape();
+        newShape = std::make_unique<ZShape>();
     }
     else if (shapeNum == 5)
     {
-        newShape = new SShape();
+        newShape = std::make_unique<SShape>();
     }
     else //if (shapeNum == 6)
     {
-        newShape = new IShape();
+        newShape = std::make_unique<IShape>();
     }
     shapeQueue_.push(*newShape);
 }
@@ -74,8 +75,7 @@ void Grid::playNewShape()
     nextShapePosition_ = { 0, cols_ / 2};
 
     // draw next shape on grid
-    draw(nextShapePosition_.first , nextShapePosition_.second, nextShape_);
-
+    draw(nextShapePosition_.first, nextShapePosition_.second, nextShape_);
 
     currentShapePosition_ = { ROW_START, cols_ / 2};
     if (canPlaceShape())
@@ -122,7 +122,7 @@ void Grid::drawCurrentShape()
 
 void Grid::drawNextShape()
 {
-    draw(nextShapePosition_.first , nextShapePosition_.second, nextShape_);
+    draw(nextShapePosition_.first, nextShapePosition_.second, nextShape_);
 }
 
 void Grid::draw(int row, int col, const Shape& myShape)
@@ -143,7 +143,7 @@ void Grid::draw(int row, int col, const Shape& myShape)
         }
     }
 }
-
+/* deprecated
 int Grid::getShapeWidth()
 {
     // go through each row and count the number of 1's
@@ -167,6 +167,7 @@ int Grid::getShapeWidth()
     }
     return maxWidth;
 }
+*/
 
 // clear shape from grid and determine if we can make the move in the unit direction
 // then redraw the shapea back where it was originally
@@ -297,7 +298,6 @@ void Grid::rotateShape()
 bool Grid::updateShape(char dir)
 {
     std::lock_guard<std::mutex> guard(myMutex);
-    std::pair<int, int> pos = currentShapePosition_;
     if (dir == 'a') // move left
     {
         if (!isMovementBlocked({0, -1}))
@@ -360,7 +360,6 @@ bool Grid::updateShape(char dir)
                 }
             }
         }
-
     }
 
     return true;   
